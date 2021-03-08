@@ -1,6 +1,6 @@
 from typing import List
 from itertools import combinations
-import collections
+from collections import Counter
 
 
 class Fact:
@@ -64,42 +64,47 @@ class Tautology(Fact):
 class Argument:
     # An argument from 'P to not Q' makes the case 'P and not Q'
     # see Definition 2, page 132
-    def __init__(self, premise: Fact, conclusion: Fact):
-        self._premise = premise
+    def __init__(self, premises: List[Fact], conclusion: Fact):
+        self._premises = premises
         self._conclusion = conclusion
 
     def __str__(self):
-        return 'if %s then %s' % (self._premise.statement, self._conclusion.statement)
+        return_string = ''
+        for fact in self._premises[:-1]:
+            return_string += 'if %s and' % fact.statement
+        return_string += 'if %s' % self._premises[-1]
+        return_string += 'than %s' % self._conclusion.statement
+        return return_string
 
     @property
-    def conclusion(self):
+    def conclusion(self) -> Fact:
         return self._conclusion
 
     @property
-    def premise(self):
-        return self._premise
+    def premises(self) -> list:
+        return self._premises
 
 
 class Case:
     def __init__(self, fact_set: List[Fact], probability=0.0, name: str = None):
         self._fact_set = fact_set
-        self._value = probability
+        self._probability = probability
         self._name = name
 
     @property
-    def fact_set(self):
+    def fact_set(self) -> list:
         return self._fact_set
 
     @property
-    def probability(self):
-        return self._value
+    def probability(self) -> float:
+        return self._probability
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     def __eq__(self, other):
-        return collections.Counter(self._fact_set) == collections.Counter(other.fact_set)
+        return Counter(self._fact_set) == Counter(other.fact_set)
 
     def __add__(self, other):
         return Case(self._fact_set + other.fact_set,
@@ -133,28 +138,50 @@ class CaseModel:
         self._valid = True
 
     @property
-    def cases(self):
+    def cases(self) -> list:
         return self._case_list
 
     @property
-    def valid(self):
+    def valid(self) -> bool:
         return self._valid
 
-    def coherent(self, arg: Argument):
+    def coherent(self, arg: Argument) -> (bool, Case):
         for case in self._case_list:
-            if arg.premise in case.fact_set and arg.conclusion in case.fact_set and case.probability > 0.0:
-                return True
-        return False
+            if all([fact in case.fact_set for fact in arg.premises]) and \
+                    arg.conclusion in case.fact_set and \
+                    case.probability > 0.0:
+                return True, case
+        return False, None
 
-    def conclusive(self, arg):
-        if self.coherent(arg):
+    def conclusive(self, arg: Argument) -> bool:
+        coherent, coherent_case = self.coherent(arg)
+        if coherent:
             for case in self._case_list:
-                if not (case.probability > 0.0 and arg.premise in case.fact_set and arg.conclusion in case.fact_set):
+                if not (all([fact in case.fact_set for fact in arg.premises]) and
+                        arg.conclusion in case.fact_set and
+                        case.probability > 0.0):
                     return False
-                else:
-                    return True
+            return True
 
+    def presumptively_valid(self, arg: Argument) -> bool:
+        coherent, coherent_case = self.coherent(arg)
+        if coherent:
+            for case in self._case_list:
+                if all([fact in case.fact_set for fact in arg.premises]):
+                    if not coherent_case.probability >= case.probability:
+                        return False
+            return True
 
-def conditional_probability(case1: Case, case2: Case):
-    if case2.probability != 0.0:
-        return (case1.probability + case2.probability) / case2.probability
+    def probability(self, fact: Fact) -> float:
+        probability = 0.0
+        for case in self._case_list:
+            if fact in case.fact_set:
+                probability += case.probability
+        return probability
+
+    def conditional_probability(self, fact: Fact, given_fact: Fact) -> float:
+        probability = 0.0
+        for case in self._case_list:
+            if fact in case.fact_set and given_fact in case.fact_set:
+                probability += case.probability
+        return probability / self.probability(given_fact)

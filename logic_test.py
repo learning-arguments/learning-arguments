@@ -50,21 +50,21 @@ def test_simonshaven() -> None:
 
     # Examples from Simonshaven paper, section 2.2.1 - Arguments
     # Coherence
-    argument_coherent_conclusive = Argument(premise=all_evidence, conclusion=guilty)
+    argument_coherent_conclusive = Argument(premises=[all_evidence], conclusion=guilty)
     print('%s is coherent: %s' % (argument_coherent_conclusive, simplified_case_model.coherent(argument_coherent_conclusive)))
-    argument_incoherent = Argument(premise=all_evidence, conclusion=perry)
+    argument_incoherent = Argument(premises=[all_evidence], conclusion=perry)
     print('%s is coherent: %s' % (argument_incoherent, simplified_case_model.coherent(argument_incoherent)))
 
     # Presumptive Validity
-    # FIXME: Not sure how to understand "from empty premises (which obtain in all cases and are logically formalized as a tautology)"
-    # argument_presumptively_valid_inconclusive = Argument(premise=, conclusion=guilty)
-    # print('%s is coherent: %s' % (argument_presumptively_valid, simplified_case_model.presumptively_valid(argument_presumptively_valid)))
-    # argument_presumptively_invalid = Argument(premise=, conclusion=perry)
-    # print('%s is coherent: %s' % (argument_presumptively_invalid, simplified_case_model.presumptively_valid(argument_presumptively_invalid)))
+    # FIXME: Not sure how to translate "from empty premises (which obtain in all cases and are logically formalized as a tautology)"
+    #argument_presumptively_valid_inconclusive = Argument(premises=[Tautology()], conclusion=guilty)
+    #print('%s is coherent: %s' % (argument_presumptively_valid_inconclusive, simplified_case_model.presumptively_valid(argument_presumptively_valid_inconclusive)))
+    #argument_presumptively_invalid = Argument(premises=[Tautology()], conclusion=perry)
+    #print('%s is coherent: %s' % (argument_presumptively_invalid, simplified_case_model.presumptively_valid(argument_presumptively_invalid)))
 
     # Conclusive
     print('%s is conclusive: %s' % (argument_coherent_conclusive, simplified_case_model.conclusive(argument_coherent_conclusive)))
-    # print('%s is coherent: %s' % (argument_presumptively_valid_inconclusive, simplified_case_model.conclusive(argument_presumptively_valid_inconclusive)))
+    #print('%s is coherent: %s' % (argument_presumptively_valid_inconclusive, simplified_case_model.conclusive(argument_presumptively_valid_inconclusive)))
 
 
     # =======================
@@ -131,6 +131,22 @@ def test_simonshaven() -> None:
 
     assert full_case_model.valid
 
+    # Arguments (page 1192)
+    argument_1 = Argument(premises=[Fact('remains-victim')], conclusion=Fact('victim-killed'))
+    assert full_case_model.coherent(argument_1) # By Case 1
+    assert full_case_model.presumptively_valid(argument_1) # Since Case 1 in maximal in the ordering
+    assert full_case_model.conclusive(argument_1) # Since all cases imply 'victim-killed'
+
+    argument_2 = Argument(premises=[Fact('pit-found')], conclusion=Fact('perry'))
+    assert full_case_model.coherent(argument_2) # Eg. by Case 2
+    assert full_case_model.presumptively_valid(argument_2) == False # Case 1 is higher in the ordering, implying 'pit-found' but not 'perry'
+    assert full_case_model.conclusive(argument_2) == False # Cases 1 and 3 imply that 'pit-found' does not imply 'perry'
+
+    # Argument 3 premises: EVIDENCE['pit-found' : 'no-match-description']
+    argument_3 = Argument(premises=EVIDENCE[16:22], conclusion=Fact('perry'))
+    assert full_case_model.coherent(argument_3) == False # No cases imply the extended premises and the conclusion
+
+    # TODO: Should the last 3 lines of the arguments paragraph (page 1192) be done ?
 
 if __name__ == "__main__" :
     test_simonshaven()

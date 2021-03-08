@@ -11,8 +11,9 @@ def test_1():
 
     case_model = CaseModel(cases=[case1, case2])
 
-    argument = Argument(premise=rain, conclusion=not_sun)
-    print('%s is coherent: %s' % (argument, case_model.coherent(argument)))
+    argument = Argument(premises=[rain], conclusion=not_sun)
+    coherent, coherent_case = case_model.coherent(argument)
+    print('%s is coherent: %s' % (argument, coherent))
     print('%s is conclusive: %s' % (argument, case_model.conclusive(argument)))
 
     assert case_model.valid

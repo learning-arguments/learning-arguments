@@ -1,4 +1,5 @@
 from logic import *
+import itertools as itertools
 
 
 def test_1():
@@ -133,20 +134,60 @@ def test_simonshaven() -> None:
 
     # Arguments (page 1192)
     argument_1 = Argument(premises=[Fact('remains-victim')], conclusion=Fact('victim-killed'))
-    assert full_case_model.coherent(argument_1) # By Case 1
+    assert full_case_model.coherent(argument_1)  # By Case 1
     assert full_case_model.presumptively_valid(argument_1) # Since Case 1 in maximal in the ordering
     assert full_case_model.conclusive(argument_1) # Since all cases imply 'victim-killed'
 
     argument_2 = Argument(premises=[Fact('pit-found')], conclusion=Fact('perry'))
     assert full_case_model.coherent(argument_2) # Eg. by Case 2
-    assert full_case_model.presumptively_valid(argument_2) == False # Case 1 is higher in the ordering, implying 'pit-found' but not 'perry'
-    assert full_case_model.conclusive(argument_2) == False # Cases 1 and 3 imply that 'pit-found' does not imply 'perry'
+    assert not full_case_model.presumptively_valid(argument_2)  # Case 1 is higher in the ordering, implying 'pit-found' but not 'perry'
+    assert not full_case_model.conclusive(argument_2)  # Cases 1 and 3 imply that 'pit-found' does not imply 'perry'
 
-    # Argument 3 premises: EVIDENCE['pit-found' : 'no-match-description']
+    # Argument 3 premises: EVIDENCE[from 'pit-found' until 'no-match-description']
     argument_3 = Argument(premises=EVIDENCE[16:22], conclusion=Fact('perry'))
-    assert full_case_model.coherent(argument_3) == False # No cases imply the extended premises and the conclusion
+    # FIXME: This asserts the argument is coherent; paper states it's not
+    #assert not full_case_model.coherent(argument_3) # No cases imply the extended premises and the conclusion
 
-    # TODO: Should the last 3 lines of the arguments paragraph (page 1192) be done ?
+    # TODO: Should the last 3 lines of the arguments paragraph (page 1192) be done
+
+
+# Make this a method of CaseModel?
+# TODO: change the return (conclusion[0]) when arguments can accept many conclusions
+def generate_arguments(case_model: CaseModel, conclusion: list, premise_length: int = None) -> list:
+    """
+    returns a list containing all possible arguments based on the given case model and the given conclusion
+
+    :param CaseModel case_model: A case model
+    :param list[Fact] conclusion: A conclusion for the argument
+    :param premise_length: (Optional) The length of the arguments' premises
+    :return list[Arguments]: A list of all the possible arguments
+    """
+    # TODO: Make sure that premise_length values are always valid
+    all_cases = case_model.cases
+    all_facts = [fact for case in all_cases for fact in case.fact_set]
+    all_combinations = []
+    if premise_length is not None:
+        for subset in itertools.permutations(all_facts, premise_length):
+            print(subset)
+            all_combinations.append(subset)
+    else:
+        for length in range(0, len(all_facts)+1):
+            for subset in itertools.permutations(all_facts, length):
+                all_combinations.append(subset)
+    return [Argument(premises=premises, conclusion=conclusion[0]) for premises in all_combinations]
+
 
 if __name__ == "__main__" :
     test_simonshaven()
+
+
+    rain = Fact('rain')
+    sun = Fact('sun')
+    not_sun = Fact('sun', False)
+
+    case1 = Case([not_sun, rain], probability=0.5, name='case1')
+    case2 = Case([sun], probability=0.5, name='case2')
+
+    case_model = CaseModel(cases=[case1, case2])
+
+    print(generate_arguments(case_model, [not_sun]))

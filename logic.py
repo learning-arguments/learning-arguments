@@ -120,12 +120,13 @@ class CaseModel:
     def __init__(self, cases: List[Case]):
         self._case_list: List[Case] = cases
         self._valid = False
-        self._check_validity()
 
-    def _check_validity(self):
+    def check_validity(self, print_progress: bool = False):
         # Definition 1, page 131
         # ToDo: Implement condition 5
         for case1, case2 in combinations(self._case_list, 2):
+            if print_progress:
+                print('Check validity %s %s ' % (case1.name, case2.name))
             assert case1.negate() not in self._case_list, "Case Model not valid, condition 1 was violated"
             if not case1 == case2:
                 assert not case1 + case2 in self._case_list, "Case Model not valid, condition 2 was violated"

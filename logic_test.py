@@ -11,6 +11,7 @@ def test_1():
     case2 = Case([sun], probability=0.5, name='case2')
 
     case_model = CaseModel(cases=[case1, case2])
+    case_model.check_validity()
 
     argument = Argument(premises=[rain], conclusion=not_sun)
     coherent, coherent_case = case_model.coherent(argument)
@@ -82,6 +83,8 @@ def test_simonshaven() -> None:
                  probability=0.1, name='case 3')
 
     simplified_case_model = CaseModel(cases=[case1, case2_a, case2_b, case3])
+
+    simplified_case_model.check_validity(True)
 
     assert simplified_case_model.valid
 
@@ -183,6 +186,7 @@ def test_simonshaven() -> None:
     full_case_model = CaseModel([case_1, case_3, case_2_1, case_2_2, case_2_3, case_2_4, case_2_5, case_4_1,
                                  case_4_2, case_4_3, case_4_4, case_4_5, case_4_6, case_4_7])
 
+    full_case_model.check_validity()
     assert full_case_model.valid
 
     # Arguments (page 1192)
@@ -235,6 +239,7 @@ def generate_arguments(case_model: CaseModel, conclusion: list, premise_length: 
 
 
 if __name__ == "__main__":
+    test_1()
     test_simonshaven()
 
     rain = Fact('rain')

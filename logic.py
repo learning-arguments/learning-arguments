@@ -1,6 +1,7 @@
 from typing import List
 from itertools import combinations
 from collections import Counter
+from multiprocessing import Pool
 
 
 class Fact:
@@ -16,6 +17,12 @@ class Fact:
 
     def __bool__(self):
         return self._not_negated
+
+    def __repr__(self):
+        if self._not_negated:
+            return self._statement
+        else:
+            return 'not ' + self._statement
 
     @property
     def statement(self) -> str:
@@ -71,9 +78,9 @@ class Argument:
     def __str__(self):
         return_string = ''
         for fact in self._premises[:-1]:
-            return_string += 'if %s and' % fact.statement
-        return_string += 'if %s' % self._premises[-1]
-        return_string += 'than %s' % self._conclusion.statement
+            return_string += 'if %s and ' % fact.statement
+        return_string += 'if %s ' % self._premises[-1]
+        return_string += 'than %s ' % self._conclusion.statement
         return return_string
 
     @property
@@ -90,6 +97,9 @@ class Case:
         self._fact_set = fact_set
         self._probability = probability
         self._name = name
+
+    def __hash__(self):
+        return hash(self.name + str(self.probability))
 
     @property
     def fact_set(self) -> list:
@@ -116,26 +126,32 @@ class Case:
         return Case(fact_set=negated_fact_set, probability=self.probability, name=self.name)
 
 
+def check_cases(cases_list, complete_case_list):
+    for case1, case2 in cases_list:
+        # Definition 1, page 131
+        # ToDo: Implement condition 5
+        assert case1.negate() not in complete_case_list, "Case Model not valid, condition 1 was violated"
+        if not case1 == case2:
+            assert not case1 + case2 in complete_case_list, "Case Model not valid, condition 2 was violated"
+        if case1 == case2:
+            assert case1 == case2, "Case Model not valid, condition 3 was violated"
+            # This is trivial
+        if not (case1.probability >= case2.probability or case1.probability <= case2.probability):
+            assert False, "Case Model not valid, condition 4 was violated"
+
+
 class CaseModel:
     def __init__(self, cases: List[Case]):
         self._case_list: List[Case] = cases
         self._valid = False
 
-    def check_validity(self, print_progress: bool = False):
-        # Definition 1, page 131
-        # ToDo: Implement condition 5
-        for case1, case2 in combinations(self._case_list, 2):
-            if print_progress:
-                print('Check validity %s %s ' % (case1.name, case2.name))
-            assert case1.negate() not in self._case_list, "Case Model not valid, condition 1 was violated"
-            if not case1 == case2:
-                assert not case1 + case2 in self._case_list, "Case Model not valid, condition 2 was violated"
-            if case1 == case2:
-                assert case1 == case2, "Case Model not valid, condition 3 was violated"
-                # This is trivial
-            if not (case1.probability >= case2.probability or case1.probability <= case2.probability):
-                assert False, "Case Model not valid, condition 4 was violated"
-
+    def check_validity(self, no_processes: int = 5):
+        case_combinations = list(set(combinations(self._case_list, 2)))
+        case_combinations_splitted = [case_combinations[i::no_processes] for i in range(no_processes)]
+        args = [(case_list, self._case_list) for case_list in case_combinations_splitted]
+        with Pool(5) as p:
+            p.starmap(check_cases, args)
+        print('Case is valid')
         self._valid = True
 
     @property
@@ -157,12 +173,11 @@ class CaseModel:
     def conclusive(self, arg: Argument) -> bool:
         coherent, coherent_case = self.coherent(arg)
         if coherent:
+            valid = []
             for case in self._case_list:
-                if not (all([fact in case.fact_set for fact in arg.premises]) and
-                        arg.conclusion in case.fact_set and
-                        case.probability > 0.0):
-                    return False
-            return True
+                if all([fact in case.fact_set for fact in arg.premises]) and case.probability > 0.0:
+                    valid.append(arg.conclusion in case.fact_set)
+            return all(valid)
 
     def presumptively_valid(self, arg: Argument) -> bool:
         coherent, coherent_case = self.coherent(arg)

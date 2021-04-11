@@ -5,6 +5,7 @@ from logic import Case, Fact, CaseModel
 
 cwd = os.getcwd()
 
+
 def load_csv_data(data_set_name: str) -> pd.DataFrame:
     return pd.read_csv(os.path.join(cwd, *['data', data_set_name]))
 

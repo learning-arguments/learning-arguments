@@ -1,177 +1,11 @@
-from typing import TypeVar, Union, Tuple, List, Set, Dict, FrozenSet, Callable
-from dataclasses import dataclass
-from operator import itemgetter
+from logic import *
+from typing import *
 import itertools as it
-import re
-
-
-@dataclass(frozen=True)
-class Fact:
-    is_true: bool
-    name: str
-
-    def __str__(self) -> str:
-        return ('' if self.is_true else '¬') + self.name
-
-    @property
-    def negation(self) -> 'Fact':
-        return Fact(not self.is_true, self.name)
-
-    @staticmethod
-    def fromStr(str: str) -> 'Fact':
-        if str[0] == '¬' or str[0] == '~':
-            return Fact(False, str[1:])
-        else:
-            return Fact(True, str)
-
-
-@dataclass
-class Case:
-    priority: float
-    facts: FrozenSet[Fact]
-
-    def __str__(self):
-        return '{0}: {1}'.format(
-            self.priority,
-            ' ∧ '.join([str(fact) for fact
-                        in sorted(self.facts, key=lambda x: x.name)]))
-
-    @staticmethod
-    def fromStr(priority: Union[int, float], str: str) -> 'Case':
-        facts = re.split(',|∧', str.replace(' ', ''))
-        return Case(priority, [Fact.fromStr(fact) for fact in facts])
-
-
-@dataclass
-class CaseModel:
-    cases: List[Case]
-
-    @staticmethod
-    def fromStr(cases: List[Tuple[Union[int, float], str]]) -> 'CaseModel':
-        return CaseModel([Case.fromStr(case[0], case[1])
-                          for case in cases])
-
-    def most_preferred_cases(self, facts: List[Fact]) -> List[Case]:
-        most_preferred_cases = []
-        max_priority = 0
-        for case in self.cases:
-            if subset(facts, case.facts):
-                if case.priority > max_priority:
-                    max_priority = case.priority
-                    most_preferred_cases = [case]
-                elif case.priority == max_priority:
-                    most_preferred_cases.append(case)
-        return most_preferred_cases
-
-
-def implies(a: bool, b: bool) -> bool:
-    return (not a) or b
-
-
-def subset(a, b):
-    return all([a_ in b for a_ in a])
-
-
-def proper_subset(a, b):
-    return subset(a, b) and not subset(b, a)
-
-
-@dataclass(frozen=True)
-class Argument:
-    premises: List[Fact]
-    conclusions: List[Fact]
-
-    def __str__(self, arrow='<-'):
-        return '{0} {1} {2}'.format(
-            ' ∧ '.join([str(fact) for fact
-                        in sorted(self.conclusions, key=str)]),
-            arrow,
-            ' ∧ '.join([str(fact) for fact
-                        in sorted(self.premises, key=str)]))
-
-    @staticmethod
-    def fromStr(s: str) -> 'Argument':
-        s = s.replace(' ', '')
-        if '->' in s:
-            [premises, conclusions] = s.split('->')
-        elif '<-' in s:
-            [conclusions, premises] = s.split('<-')
-        else:
-            raise Exception("No arrow '<-' or '->' in string.")
-
-        def _fromStr(s_: str) -> List[Fact]:
-            return [Fact.fromStr(a) for a in re.split(',|∧', s_)]
-
-        if premises == '':
-            return Argument([], _fromStr(conclusions))
-        else:
-            return Argument(_fromStr(premises), _fromStr(conclusions))
-
-    @property
-    def case_made_by(self) -> List[Fact]:
-        return self.premises + self.conclusions
-
-    @property
-    def positions(self) -> List[Fact]:
-        return self.case_made_by
-
-    @property
-    def is_properly_presumptive(self) -> bool:
-        return not subset(self.conclusions, self.premises)
-
-    @property
-    def is_a_presumption(self) -> bool:
-        return self.premises == []
-
-    def is_coherent_in(self, case_model: CaseModel) -> bool:
-        return any([subset(self.positions, case.facts)
-                    for case in case_model.cases])
-
-    def is_conclusive_in(self, case_model: CaseModel) -> bool:
-        return (self.is_coherent_in(case_model) and
-                all([implies(subset(self.premises, case.facts),
-                             subset(self.conclusions, case.facts))
-                     for case in case_model.cases]))
-
-    def is_presumptively_valid_in(self, case_model: CaseModel) -> bool:
-        most_preferred_cases = case_model.most_preferred_cases(self.premises)
-        return len(most_preferred_cases) > 0 and \
-            all([subset(self.conclusions, case.facts)
-                 for case in most_preferred_cases])
-
-    def is_properly_defeasible_in(self, case_model: CaseModel) -> bool:
-        return (self.is_presumptively_valid_in(case_model)
-                and not self.is_conclusive_in(case_model))
-
-    def is_defeated_by_in(self, circumstances: List[Fact], case_model: CaseModel) -> bool:
-        return (self.is_presumptively_valid_in(case_model) and
-                not Argument(self.premises + circumstances,
-                             self.conclusions)
-                    .is_presumptively_valid_in(case_model))
-
-    def is_rebutted_by_in(self, circumstances: List[Fact], case_model: CaseModel) -> bool:
-        def is_rebutted(fact: Fact) -> bool:
-            return (Argument(self.premises + circumstances,
-                             [fact.negation])
-                    .is_presumptively_valid_in(case_model))
-        return (self.is_defeated_by_in(circumstances, case_model) and
-                any([is_rebutted(conclusion)
-                     for conclusion in self.conclusions]))
-
-    def is_undercut_by_in(self, circumstances: List[Fact], case_model: CaseModel) -> bool:
-        return (self.is_defeated_by_in(circumstances, case_model) and
-                not self.is_rebutted_by_in(circumstances, case_model))
-
-    def is_excluded_by_in(self, circumstances: List[Fact], case_model: CaseModel) -> bool:
-        return not (Argument(self.premises + circumstances,
-                             self.conclusions)
-                    .is_coherent_in(case_model))
-
 
 def premise_candidates(names: List[str]) -> List[List[Fact]]:
     premise_candidates = list(it.product(*[
-        [[Fact(True, name)],
-         [Fact(False, name)],
+        [[Fact(name, True)],
+         [Fact(name, False)],
          []]
         for name in names]))
     return [list(it.chain(*a))
@@ -180,8 +14,8 @@ def premise_candidates(names: List[str]) -> List[List[Fact]]:
 
 def fact_candidates(names: List[str]) -> List[Fact]:
     return list(it.chain(*[
-        [Fact(True, name),
-         Fact(False, name)]
+        [Fact(name, True),
+         Fact(name, False)]
         for name in names
     ]))
 
@@ -197,7 +31,7 @@ def candidate_arguments(names: List[str]) -> List[Argument]:
 
 def names(case_model: CaseModel) -> List[str]:
     return list(set(it.chain(
-        *[[fact.name for fact in case.facts]
+        *[[fact.statement for fact in case.facts]
           for case in case_model.cases])))
 
 
@@ -211,7 +45,7 @@ def is_an_exception(a: Argument, arguments: List[Argument]) -> bool:
     # assumes that every argument only has 1 conclusion
     assert all([len(arg.conclusions) == 1 for arg in [a, *arguments]])
     return any([(proper_subset(argument.premises, a.premises) and
-                argument.conclusions[0].name == a.conclusions[0].name and
+                argument.conclusions[0].statement == a.conclusions[0].statement and
                 argument.conclusions[0].is_true != a.conclusions[0].is_true)
                 for argument in arguments])
 
@@ -242,8 +76,8 @@ def postprocess(arguments: List[Argument]) -> List[Argument]:
 
 
 def is_consistent(facts: List[Fact]) -> bool:
-    true_names = {fact.name for fact in facts if fact.is_true}
-    false_names = {fact.name for fact in facts if not fact.is_true}
+    true_names = {fact.statement for fact in facts if fact.is_true}
+    false_names = {fact.statement for fact in facts if not fact.is_true}
     return len(true_names.intersection(false_names)) == 0
 
 
@@ -253,8 +87,8 @@ def premise_candidates_(
     return {
         frozenset({fact, *premises}) for fact
         in fact_candidates(names(case_model))
-        if fact.name != conclusion.name
-        and fact.name not in {p.name for p in premises}}
+        if fact.statement != conclusion.statement
+        and fact.statement not in {p.statement for p in premises}}
 
 
 def more_specific_sets(subsets: Set[FrozenSet[Fact]]) -> Set[FrozenSet[Fact]]:
@@ -279,20 +113,22 @@ class Theory:
     # coherent arguments that are _not_ also presumptively valid:
     coherent_arguments: List[Argument]
 
-    def print(self,
-              print_conclusive_arguments=True,
-              print_presumptively_valid_arguments=True,
-              print_coherent_arguments=False
-              ) -> None:
-        if print_conclusive_arguments:
+    def __repr__(self,
+                 conclusive_arguments=True,
+                 presumptively_valid_arguments=True,
+                 coherent_arguments=False
+                 ) -> str:
+        s = ''
+        if conclusive_arguments:
             for a in sorted(self.conclusive_arguments, key=str):
-                print(a)
-        if print_presumptively_valid_arguments:
+                s += '\n' + str(a)
+        if presumptively_valid_arguments:
             for a in sorted(self.presumptively_valid_arguments, key=str):
-                print(a.__str__(arrow='<~'))
-        if print_coherent_arguments:
+                s += '\n' + a.__repr__(arrow='<~')
+        if coherent_arguments:
             for a in sorted(self.coherent_arguments, key=str):
-                print(a.__str__(arrow='<:'))
+                s += a.__repr__(arrow='<:')
+        return s
 
     @staticmethod
     def learn_with_naive_search(case_model: CaseModel) -> 'Theory':
@@ -321,15 +157,15 @@ class Theory:
         )
 
     @staticmethod
-    def learn_with_pruned_search(case_model: CaseModel, depth: int = 5, log : bool = False) -> 'Theory':
+    def learn_with_pruned_search(case_model: CaseModel, depth: int = 5, log: bool = False) -> 'Theory':
         theory = Theory.union(
             *[Theory.init_pruned_search(
                 candidate, case_model, depth, log)
               for candidate in fact_candidates(names(case_model))])
         return Theory(
             join_arguments(theory.conclusive_arguments),
-            join_arguments(theory.presumptively_valid_arguments), join_arguments(
-                theory.coherent_arguments)
+            join_arguments(theory.presumptively_valid_arguments), 
+            join_arguments(theory.coherent_arguments)
         )
 
     @staticmethod

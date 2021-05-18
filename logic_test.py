@@ -7,13 +7,12 @@ def test_1():
     sun = Fact('sun')
     not_sun = Fact('sun', False)
 
-    case1 = Case([not_sun, rain], probability=0.5, name='case1')
-    case2 = Case([sun], probability=0.5, name='case2')
+    case1 = Case(0.5, [not_sun, rain])
+    case2 = Case(0.5, [sun])
 
     case_model = CaseModel(cases=[case1, case2])
-    case_model.check_validity()
 
-    argument = Argument(premises=[rain], conclusion=not_sun)
+    argument = Argument(premises=[rain], conclusions=[not_sun])
     coherent, coherent_case = case_model.coherent(argument)
     print('%s is coherent: %s' % (argument, coherent))
     print('%s is conclusive: %s' % (argument, case_model.conclusive(argument)))
@@ -31,30 +30,26 @@ def test_proof_with_and_without_probabilities():
     justification = Fact('justification', True)
     alibi = Fact('alibi', True)
 
-    # (Arguments 3, 6, 7 can not be modelled properly, so there is a workaround for them.)
-    case1 = Case([punishment, guilt, evidence], probability=0.50, name='case1')
-    case2 = Case([no_punishment, guilt, evidence, justification], probability=0.25, name='case 2')
-    case3 = Case([no_guilt, evidence, alibi], probability=0.25, name='case 3')
+    case1 = Case(0.50, [punishment, guilt, evidence])
+    case2 = Case(0.25, [no_punishment, guilt, evidence, justification])
+    case3 = Case(0.25, [no_guilt, evidence, alibi])
     case_model = CaseModel(cases=[case1, case2, case3])
     assert case_model.valid
-    argument1 = Argument([evidence], guilt)
-    argument2 = Argument([guilt], punishment)
-    # argument3 = Argument([evidence], [guilt, punishment])
-    argument3_ = Argument([evidence], punishment)
-    argument4 = Argument([evidence, alibi], guilt)
-    argument5 = Argument([guilt, justification], punishment)
-    # argument6 = Argument([evidence, alibi], [guilt, punishment])
-    argument6_ = Argument([evidence, alibi], punishment)
-    # argument7 = Argument([evidence, justification], [guilt, punishment])
-    argument7_ = Argument([evidence, justification], punishment)
-    argument8 = Argument([evidence, justification], guilt)
+    argument1 = Argument([evidence], [guilt])
+    argument2 = Argument([guilt], [punishment])
+    argument3 = Argument([evidence], [guilt, punishment])
+    argument4 = Argument([evidence, alibi], [guilt])
+    argument5 = Argument([guilt, justification], [punishment])
+    argument6 = Argument([evidence, alibi], [guilt, punishment])
+    argument7 = Argument([evidence, justification], [guilt, punishment])
+    argument8 = Argument([evidence, justification], [guilt])
     assert case_model.presumptively_valid(argument1)
     assert case_model.presumptively_valid(argument2)
-    assert case_model.presumptively_valid(argument3_)
+    assert case_model.presumptively_valid(argument3)
     assert not case_model.presumptively_valid(argument4)
     assert not case_model.presumptively_valid(argument5)
-    assert not case_model.presumptively_valid(argument6_)
-    assert not case_model.presumptively_valid(argument7_)
+    assert not case_model.presumptively_valid(argument6)
+    assert not case_model.presumptively_valid(argument7)
     assert case_model.presumptively_valid(argument8)
 
 
@@ -74,27 +69,23 @@ def test_simonshaven() -> None:
     not_perry = Fact('Perry', False)
     not_all_evidence = Fact('all evidence', False)
 
-    case1 = Case([guilty, all_evidence], probability=0.5, name='case 1')
-    case2_a = Case([guilty, robbery, perry, not_all_evidence],
-                   probability=0.2, name='case 2_a')
-    case2_b = Case([not_guilty, robbery, not_perry, third, not_all_evidence], probability=0.2,
-                   name='case2_b')
-    case3 = Case([not_guilty, not_robbery, not_all_evidence],
-                 probability=0.1, name='case 3')
+    case1 = Case(0.5, [guilty, all_evidence])
+    case2_a = Case(0.2, [guilty, robbery, perry, not_all_evidence])
+    case2_b = Case(0.2, [not_guilty, robbery, not_perry, third, not_all_evidence])
+    case3 = Case(0.1, [not_guilty, not_robbery, not_all_evidence])
 
     simplified_case_model = CaseModel(cases=[case1, case2_a, case2_b, case3])
 
-    simplified_case_model.check_validity(True)
 
     assert simplified_case_model.valid
 
     # Examples from Simonshaven paper, section 2.2.1 - Arguments
     # Coherence
     argument_coherent_conclusive = Argument(
-        premises=[all_evidence], conclusion=guilty)
+        premises=[all_evidence], conclusions=[guilty])
     print('%s is coherent: %s' % (argument_coherent_conclusive,
           simplified_case_model.coherent(argument_coherent_conclusive)))
-    argument_incoherent = Argument(premises=[all_evidence], conclusion=perry)
+    argument_incoherent = Argument(premises=[all_evidence], conclusions=[perry])
     print('%s is coherent: %s' % (argument_incoherent,
           simplified_case_model.coherent(argument_incoherent)))
 
@@ -151,53 +142,46 @@ def test_simonshaven() -> None:
                 Fact('remains-silent')]
 
     # Case 1, Case 3, Case 2.1, ..., Case 2.5, Case 4.1, ..., Case 4.7, respectively: 50 %, 20 %, 4 %, ..., 4 %, 1.4 %, ..., 1.4 %.
-    case_1 = Case(fact_set=GUILT+EVIDENCE, probability=0.5, name='Case 1')
+    case_1 = Case(facts=GUILT+EVIDENCE, probability=0.5)
 
-    case_2_1 = Case(fact_set=PERRY + EVIDENCE[:16] + [Fact(
-        'no-long-stay', False)], probability=0.04, name='Case 2.1')
-    case_2_2 = Case(fact_set=PERRY + EVIDENCE[:18] + [Fact(
-        'no-match-perry', False)], probability=0.04, name='Case 2.2')
-    case_2_3 = Case(fact_set=PERRY + EVIDENCE[:19] + [Fact(
-        'no-fit-pipe', False)], probability=0.04, name='Case 2.3')
-    case_2_4 = Case(fact_set=PERRY + EVIDENCE[:20] + [Fact('phone-not-linked', False)], probability=0.04,
-                    name='Case 2.4')
-    case_2_5 = Case(fact_set=PERRY + EVIDENCE[:21] + [Fact('no-match-description', False)], probability=0.04,
-                    name='Case 2.5')
+    case_2_1 = Case(facts=PERRY + EVIDENCE[:16] + [Fact(
+        'no-long-stay', False)], probability=0.04)
+    case_2_2 = Case(facts=PERRY + EVIDENCE[:18] + [Fact(
+        'no-match-perry', False)], probability=0.04)
+    case_2_3 = Case(facts=PERRY + EVIDENCE[:19] + [Fact(
+        'no-fit-pipe', False)], probability=0.04)
+    case_2_4 = Case(facts=PERRY + EVIDENCE[:20] + [Fact('phone-not-linked', False)], probability=0.04)
+    case_2_5 = Case(facts=PERRY + EVIDENCE[:21] + [Fact('no-match-description', False)], probability=0.04)
 
-    case_3 = Case(fact_set=THIRD + EVIDENCE[:24] + [
-                  Fact('no-connection', False)], probability=0.2, name='Case 3')
+    case_3 = Case(facts=THIRD + EVIDENCE[:24] + [
+                  Fact('no-connection', False)], probability=0.2)
 
-    case_4_1 = Case(fact_set=OTHER + EVIDENCE[:25] + [Fact('delayed-emergency-call', False)], probability=0.014,
-                    name='Case 4.1')
-    case_4_2 = Case(fact_set=OTHER + EVIDENCE[:26] + [Fact('gunshot-residue', False)], probability=0.014,
-                    name='Case 4.2')
-    case_4_3 = Case(fact_set=OTHER + EVIDENCE[:27] + [Fact('cigarette-butts', False)], probability=0.014,
-                    name='Case 4.3')
+    case_4_1 = Case(facts=OTHER + EVIDENCE[:25] + [Fact('delayed-emergency-call', False)], probability=0.014)
+    case_4_2 = Case(facts=OTHER + EVIDENCE[:26] + [Fact('gunshot-residue', False)], probability=0.014)
+    case_4_3 = Case(facts=OTHER + EVIDENCE[:27] + [Fact('cigarette-butts', False)], probability=0.014)
     # TODO:make sure the "Or" is correctly used
-    case_4_4 = Case(fact_set=OTHER + EVIDENCE[:28] + [Or(Fact('says-walking', False), Fact('seen-in-car', False))],
-                    probability=0.014, name='Case 4.4')
-    case_4_5 = Case(fact_set=OTHER + EVIDENCE[:30] + [Or(Fact('saw-nothing-special', False), Fact('wounds-and-blood', False))],
-                    probability=0.014, name='Case 4.5')
-    case_4_6 = Case(fact_set=OTHER + EVIDENCE[:32] + [Or(Fact('says-robbed', False), Fact('valuables-not-stolen', False))],
-                    probability=0.014, name='Case 4.6')
-    case_4_7 = Case(fact_set=OTHER + EVIDENCE[:34] + [Fact('remains-silent', False)], probability=0.014,
-                    name='Case 4.7')
+    case_4_4 = Case(facts=OTHER + EVIDENCE[:28] + [Or(Fact('says-walking', False), Fact('seen-in-car', False))],
+                    probability=0.014)
+    case_4_5 = Case(facts=OTHER + EVIDENCE[:30] + [Or(Fact('saw-nothing-special', False), Fact('wounds-and-blood', False))],
+                    probability=0.014)
+    case_4_6 = Case(facts=OTHER + EVIDENCE[:32] + [Or(Fact('says-robbed', False), Fact('valuables-not-stolen', False))],
+                    probability=0.014)
+    case_4_7 = Case(facts=OTHER + EVIDENCE[:34] + [Fact('remains-silent', False)], probability=0.014)
 
     full_case_model = CaseModel([case_1, case_3, case_2_1, case_2_2, case_2_3, case_2_4, case_2_5, case_4_1,
                                  case_4_2, case_4_3, case_4_4, case_4_5, case_4_6, case_4_7])
 
-    full_case_model.check_validity()
     assert full_case_model.valid
 
     # Arguments (page 1192)
     argument_1 = Argument(
-        premises=[Fact('remains-victim')], conclusion=Fact('victim-killed'))
+        premises=[Fact('remains-victim')], conclusions=[Fact('victim-killed')])
     assert full_case_model.coherent(argument_1)  # By Case 1
     assert full_case_model.presumptively_valid(argument_1)  # Since Case 1 in maximal in the ordering
     assert full_case_model.conclusive(argument_1)  # Since all cases imply 'victim-killed'
 
     argument_2 = Argument(
-        premises=[Fact('pit-found')], conclusion=Fact('perry'))
+        premises=[Fact('pit-found')], conclusions=[Fact('perry')])
     assert full_case_model.coherent(argument_2)  # Eg. by Case 2
     # Case 1 is higher in the ordering, implying 'pit-found' but not 'perry'
     assert not full_case_model.presumptively_valid(argument_2)
@@ -205,7 +189,7 @@ def test_simonshaven() -> None:
     assert not full_case_model.conclusive(argument_2)
 
     # Argument 3 premises: EVIDENCE[from 'pit-found' until 'no-match-description']
-    argument_3 = Argument(premises=EVIDENCE[16:22], conclusion=Fact('perry'))
+    argument_3 = Argument(premises=EVIDENCE[16:22], conclusions=[Fact('perry')])
     # FIXME: This asserts the argument is coherent; paper states it's not
     # assert not full_case_model.coherent(argument_3) # No cases imply the extended premises and the conclusion
 
@@ -225,7 +209,7 @@ def generate_arguments(case_model: CaseModel, conclusion: list, premise_length: 
     """
     # TODO: Make sure that premise_length values are always valid
     all_cases = case_model.cases
-    all_facts = [fact for case in all_cases for fact in case.fact_set]
+    all_facts = [fact for case in all_cases for fact in case.facts]
     all_combinations = []
     if premise_length is not None:
         for subset in itertools.permutations(all_facts, premise_length):
@@ -246,8 +230,8 @@ if __name__ == "__main__":
     sun = Fact('sun')
     not_sun = Fact('sun', False)
 
-    case1 = Case([not_sun, rain], probability=0.5, name='case1')
-    case2 = Case([sun], probability=0.5, name='case2')
+    case1 = Case(0.5, [not_sun, rain])
+    case2 = Case(0.5, [sun])
 
     case_model = CaseModel(cases=[case1, case2])
 

@@ -1,9 +1,10 @@
-from typing import List, FrozenSet, Optional, Union, Tuple, TypeVar, Iterable
+from typing import *
 from dataclasses import dataclass
 from itertools import combinations
 from multiprocessing import Pool
 from re import split
 from functools import cached_property
+from helpers import subset, proper_subset, implies
 
 
 @dataclass(frozen=True)
@@ -24,22 +25,6 @@ class Fact:
             return Fact(str[1:], False)
         else:
             return Fact(str, True)
-
-
-def implies(a: bool, b: bool) -> bool:
-    return (not a) or b
-
-
-A = TypeVar("A")
-
-
-def subset(a: Iterable[A], b: Iterable[A]) -> bool:
-    return all([a_ in b for a_ in a])
-
-
-def proper_subset(a: Iterable[A], b: Iterable[A]) -> bool:
-    return subset(a, b) and not subset(b, a)
-
 
 @dataclass(frozen=True)
 class Argument:
@@ -244,12 +229,12 @@ class CaseModel:
 
     def most_preferred_cases(self, facts: List[Fact]) -> List[Case]:
         most_preferred_cases = []
-        max_priority = 0.0
+        max_probability = 0.0
         for case in self.cases:
             if subset(facts, case.facts):
-                if case.probability > max_priority:
-                    max_priority = case.probability
+                if case.probability > max_probability:
+                    max_probability = case.probability
                     most_preferred_cases = [case]
-                elif case.probability == max_priority:
+                elif case.probability == max_probability:
                     most_preferred_cases.append(case)
         return most_preferred_cases

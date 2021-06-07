@@ -3,3 +3,4 @@ mypy
 black
 pandas
 numpy
+scikit-learn

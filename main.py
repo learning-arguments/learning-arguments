@@ -6,4 +6,4 @@ if __name__ == "__main__":
     boston_housing_data_raw = load_csv_data('BostonHousing.csv')
     binned_data = bin_data_set(boston_housing_data_raw, bin_labels)
     case_model = generate_case_model(binned_data)
-    case_model.check_validity()
+    print(case_model.valid)

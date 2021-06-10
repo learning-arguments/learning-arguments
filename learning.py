@@ -55,7 +55,7 @@ class Theory:
     @staticmethod
     def learn_with_naive_search(case_model: CaseModel) -> "Theory":
         theory = Theory([], [], [])
-        for argument in candidate_arguments(names(case_model)):
+        for argument in candidate_arguments(namesAndCategories(case_model)):
             if argument.is_conclusive_in(case_model):
                 theory.conclusive_arguments.append(argument)
             elif argument.is_presumptively_valid_in(case_model):
@@ -81,12 +81,17 @@ class Theory:
 
     @staticmethod
     def learn_with_pruned_search(
-        case_model: CaseModel, depth: int = 5, log: bool = False
+        case_model: CaseModel,
+        depth: int = 5,
+        max_premise_size: Optional[int] = None,
+        log: bool = False,
     ) -> "Theory":
         theory = Theory.union(
             *[
-                Theory.init_pruned_search(candidate, case_model, depth, log)
-                for candidate in fact_candidates(names(case_model))
+                Theory.init_pruned_search(
+                    candidate, case_model, depth, max_premise_size, log
+                )
+                for candidate in fact_candidates(namesAndCategories(case_model))
             ]
         )
         return Theory(
@@ -97,7 +102,11 @@ class Theory:
 
     @staticmethod
     def init_pruned_search(
-        conclusion: Fact, case_model: CaseModel, depth: int, log: bool
+        conclusion: Fact,
+        case_model: CaseModel,
+        depth: int,
+        max_premise_size: Optional[int],
+        log: bool,
     ) -> "Theory":
         if log:
             print("learning", conclusion, "...")
@@ -113,7 +122,9 @@ class Theory:
             elif argument.is_coherent_in(case_model):
                 theory.coherent_arguments.append(argument)
             if argument.is_coherent_in(case_model):
-                theory = Theory.pruned_search([], conclusion, case_model, theory, depth)
+                theory = Theory.pruned_search(
+                    [], conclusion, case_model, theory, depth, max_premise_size
+                )
         return theory
 
     @staticmethod
@@ -123,9 +134,13 @@ class Theory:
         case_model: CaseModel,
         theory: "Theory",
         depth: int,
+        max_premise_size: Optional[int],
     ) -> "Theory":
+        premise_size = 1
         premise_candidates = premise_candidates_(conclusion, premises, case_model)
-        while len(premise_candidates) > 0:
+        while len(premise_candidates) > 0 and (
+            (premise_size <= max_premise_size) if max_premise_size is not None else True
+        ):
             next_premise_candidates = set()
             for subset in premise_candidates:
                 argument = Argument(list(subset), [conclusion])
@@ -149,19 +164,22 @@ class Theory:
                             # Search for exceptions.
                             theory = Theory.union(
                                 theory,
-                                Theory.pruned_search(
-                                    list(subset),
-                                    conclusion.negation,
-                                    case_model,
-                                    Theory([], [], []),
-                                    depth - 1,
-                                ),
+                                *[
+                                    Theory.pruned_search(
+                                        list(subset),
+                                        category,
+                                        case_model,
+                                        Theory([], [], []),
+                                        depth - 1,
+                                        max_premise_size,
+                                    )
+                                    for category in conclusion.other_categories
+                                ],
                             )
                     elif argument.is_coherent_in(case_model):
                         theory.coherent_arguments.append(argument)
                     if argument.is_coherent_in(case_model):
                         next_premise_candidates.add(subset)
+            premise_size += 1
             premise_candidates = more_specific_sets(next_premise_candidates)
         return theory
-
-   

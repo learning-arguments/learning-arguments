@@ -10,21 +10,35 @@ from helpers import subset, proper_subset, implies
 @dataclass(frozen=True)
 class Fact:
     statement: str
-    is_true: bool = True
+    category: str = "true"
+    categories: FrozenSet[str] = frozenset(["true", "false"])
 
     def __repr__(self) -> str:
-        return ("" if self.is_true else "¬") + self.statement
+        return (
+            ""
+            if self.category == "true"
+            else ("¬" if self.category == "false" else self.category + "_")
+        ) + self.statement
 
     @property
-    def negation(self) -> "Fact":
-        return Fact(self.statement, not self.is_true)
+    def other_categories(self) -> List["Fact"]:
+        return [
+            Fact(self.statement, category, self.categories)
+            for category in self.categories
+        ]
 
     @staticmethod
-    def fromStr(str: str) -> "Fact":
-        if str[0] == "¬" or str[0] == "~":
-            return Fact(str[1:], False)
+    def fromStr(str: str, categories: List[str] = ["true", "false"]) -> "Fact":
+        if "_" in str:
+            prefix, rest = str.split("_", maxsplit=1)
+            assert prefix in categories
+            return Fact(rest, prefix, frozenset(categories))
         else:
-            return Fact(str, True)
+            if str[0] == "¬" or str[0] == "~":
+                return Fact(str[1:], "false")
+            else:
+                return Fact(str, "true")
+
 
 @dataclass(frozen=True)
 class Argument:
@@ -37,7 +51,7 @@ class Argument:
             arrow,
             " ∧ ".join([str(fact) for fact in sorted(self.premises, key=str)]),
         )
-    
+
     def __repr__(self) -> str:
         return self.toStr()
 
@@ -113,9 +127,14 @@ class Argument:
         self, circumstances: List[Fact], case_model: "CaseModel"
     ) -> bool:
         def is_rebutted(fact: Fact) -> bool:
-            return Argument(
-                self.premises + circumstances, [fact.negation]
-            ).is_presumptively_valid_in(case_model)
+            return any(
+                [
+                    Argument(
+                        self.premises + circumstances, [category]
+                    ).is_presumptively_valid_in(case_model)
+                    for category in fact.other_categories
+                ]
+            )
 
         return self.is_defeated_by_in(circumstances, case_model) and any(
             [is_rebutted(conclusion) for conclusion in self.conclusions]

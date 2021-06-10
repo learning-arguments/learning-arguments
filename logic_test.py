@@ -5,7 +5,7 @@ import itertools as itertools
 def test_1():
     rain = Fact("rain")
     sun = Fact("sun")
-    not_sun = Fact("sun", False)
+    not_sun = Fact("sun", "false")
 
     case1 = Case(0.5, [not_sun, rain])
     case2 = Case(0.5, [sun])
@@ -20,11 +20,11 @@ def test_1():
 
 def test_proof_with_and_without_probabilities():
     punishment = Fact("punishment", True)
-    no_punishment = Fact("punishment", False)
+    no_punishment = Fact("punishment", "false")
     guilt = Fact("guilt", True)
-    no_guilt = Fact("guilt", False)
+    no_guilt = Fact("guilt", "false")
     evidence = Fact("evidence", True)
-    no_evidence = Fact("evidence", False)
+    no_evidence = Fact("evidence", "false")
     justification = Fact("justification", True)
     alibi = Fact("alibi", True)
 
@@ -63,10 +63,10 @@ def test_simonshaven_simplified() -> None:
     third = Fact("third")
     all_evidence = Fact("all evidence")
 
-    not_guilty = Fact("guilty", False)
-    not_robbery = Fact("robbery", False)
-    not_perry = Fact("Perry", False)
-    not_all_evidence = Fact("all evidence", False)
+    not_guilty = Fact("guilty", "false")
+    not_robbery = Fact("robbery", "false")
+    not_perry = Fact("Perry", "false")
+    not_all_evidence = Fact("all evidence", "false")
 
     case1 = Case(0.5, [guilty, all_evidence])
     case2_a = Case(0.2, [guilty, robbery, perry, not_all_evidence])
@@ -97,7 +97,6 @@ def test_simonshaven_simplified() -> None:
     assert argument4.is_coherent_in(simplified_case_model)
     assert not argument4.is_presumptively_valid_in(simplified_case_model)
     assert not argument4.is_conclusive_in(simplified_case_model)
-    
 
 
 def test_simonshaven_full() -> None:
@@ -116,20 +115,20 @@ def test_simonshaven_full() -> None:
     # PERRY: victim-killed ∧ ¬guilt ∧ robbery ∧ perry
     PERRY = [
         Fact("victim-killed"),
-        Fact("guilt", False),
+        Fact("guilt", "false"),
         Fact("robbery"),
         Fact("perry"),
     ]
     # THIRD: victim-killed ∧ ¬guilt ∧ robbery ∧ ¬perry ∧ third
     THIRD = [
         Fact("victim-killed"),
-        Fact("guilt", False),
+        Fact("guilt", "false"),
         Fact("robbery"),
-        Fact("perry", False),
+        Fact("perry", "false"),
         Fact("third"),
     ]
     # OTHER: victim-killed ∧ ¬guilt ∧ ¬robbery
-    OTHER = [Fact("victim-killed"), Fact("guilt", False), Fact("robbery", False)]
+    OTHER = [Fact("victim-killed"), Fact("guilt", "false"), Fact("robbery", "false")]
 
     # EVIDENCE: suspect-with-spatters ∧ suspect-with-wound ∧ suspect-shaking ∧ remains-victim ∧
     # victim-bloody-face ∧ pool-of-blood ∧ neck-injury ∧ cartridges ∧ gunshot-residue-victim ∧
@@ -182,58 +181,60 @@ def test_simonshaven_full() -> None:
     case_1 = Case(facts=GUILT + EVIDENCE, probability=0.5)
 
     case_2_1 = Case(
-        facts=PERRY + EVIDENCE[:16] + [Fact("no-long-stay", False)], probability=0.04
+        facts=PERRY + EVIDENCE[:16] + [Fact("no-long-stay", "false")], probability=0.04
     )
     case_2_2 = Case(
-        facts=PERRY + EVIDENCE[:18] + [Fact("no-match-perry", False)], probability=0.04
+        facts=PERRY + EVIDENCE[:18] + [Fact("no-match-perry", "false")],
+        probability=0.04,
     )
     case_2_3 = Case(
-        facts=PERRY + EVIDENCE[:19] + [Fact("no-fit-pipe", False)], probability=0.04
+        facts=PERRY + EVIDENCE[:19] + [Fact("no-fit-pipe", "false")], probability=0.04
     )
     case_2_4 = Case(
-        facts=PERRY + EVIDENCE[:20] + [Fact("phone-not-linked", False)],
+        facts=PERRY + EVIDENCE[:20] + [Fact("phone-not-linked", "false")],
         probability=0.04,
     )
     case_2_5 = Case(
-        facts=PERRY + EVIDENCE[:21] + [Fact("no-match-description", False)],
+        facts=PERRY + EVIDENCE[:21] + [Fact("no-match-description", "false")],
         probability=0.04,
     )
     case_3 = Case(
-        facts=THIRD + EVIDENCE[:24] + [Fact("no-connection", False)], probability=0.2
+        facts=THIRD + EVIDENCE[:24] + [Fact("no-connection", "false")], probability=0.2
     )
     case_4_1 = Case(
-        facts=OTHER + EVIDENCE[:25] + [Fact("delayed-emergency-call", False)],
+        facts=OTHER + EVIDENCE[:25] + [Fact("delayed-emergency-call", "false")],
         probability=0.014,
     )
     case_4_2 = Case(
-        facts=OTHER + EVIDENCE[:26] + [Fact("gunshot-residue", False)],
+        facts=OTHER + EVIDENCE[:26] + [Fact("gunshot-residue", "false")],
         probability=0.014,
     )
     case_4_3 = Case(
-        facts=OTHER + EVIDENCE[:27] + [Fact("cigarette-butts", False)],
+        facts=OTHER + EVIDENCE[:27] + [Fact("cigarette-butts", "false")],
         probability=0.014,
     )
     # TODO:make sure the "Or" is correctly used
     case_4_4 = Case(
         facts=OTHER
         + EVIDENCE[:28]
-        + [Fact("says-walking", False), Fact("seen-in-car", False)],
+        + [Fact("says-walking", "false"), Fact("seen-in-car", "false")],
         probability=0.014,
     )
     case_4_5 = Case(
         facts=OTHER
         + EVIDENCE[:30]
-        + [Fact("saw-nothing-special", False), Fact("wounds-and-blood", False)],
+        + [Fact("saw-nothing-special", "false"), Fact("wounds-and-blood", "false")],
         probability=0.014,
     )
     case_4_6 = Case(
         facts=OTHER
         + EVIDENCE[:32]
-        + [Fact("says-robbed", False), Fact("valuables-not-stolen", False)],
+        + [Fact("says-robbed", "false"), Fact("valuables-not-stolen", "false")],
         probability=0.014,
     )
     case_4_7 = Case(
-        facts=OTHER + EVIDENCE[:34] + [Fact("remains-silent", False)], probability=0.014
+        facts=OTHER + EVIDENCE[:34] + [Fact("remains-silent", "false")],
+        probability=0.014,
     )
 
     full_case_model = CaseModel(

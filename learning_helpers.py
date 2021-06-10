@@ -3,30 +3,45 @@ from typing import *
 import itertools as it
 
 
-def premise_candidates(names: List[str]) -> List[List[Fact]]:
+def premise_candidates(columns: Dict[str, FrozenSet[str]]) -> List[List[Fact]]:
     premise_candidates = list(
-        it.product(*[[[Fact(name, True)], [Fact(name, False)], []] for name in names])
+        it.product(
+            *[
+                [*[[Fact(name, category)] for category in columns], []]
+                for name, categories in columns.items()
+            ]
+        )
     )
     return [list(it.chain(*a)) for a in premise_candidates]
 
 
-def fact_candidates(names: List[str]) -> List[Fact]:
-    return list(it.chain(*[[Fact(name, True), Fact(name, False)] for name in names]))
+def fact_candidates(columns: Dict[str, FrozenSet[str]]) -> List[Fact]:
+    return list(
+        it.chain(
+            *[
+                [Fact(name, category, frozenset(categories)) for category in categories]
+                for name, categories in columns.items()
+            ]
+        )
+    )
 
 
-def candidate_arguments(names: List[str]) -> List[Argument]:
+def candidate_arguments(columns: Dict[str, FrozenSet[str]]) -> List[Argument]:
     return [
         Argument(ps, [c])
-        for c, ps in it.product(fact_candidates(names), premise_candidates(names))
-        if c not in ps and c.negation not in ps
+        for c, ps in it.product(fact_candidates(columns), premise_candidates(columns))
+        if c not in ps and all([other not in ps for other in c.other_categories])
     ]
 
 
-def names(case_model: CaseModel) -> List[str]:
-    return list(
+def namesAndCategories(case_model: CaseModel) -> Dict[str, FrozenSet[str]]:
+    return dict(
         set(
             it.chain(
-                *[[fact.statement for fact in case.facts] for case in case_model.cases]
+                *[
+                    [(fact.statement, fact.categories) for fact in case.facts]
+                    for case in case_model.cases
+                ]
             )
         )
     )
@@ -52,7 +67,7 @@ def is_an_exception(a: Argument, arguments: List[Argument]) -> bool:
             (
                 proper_subset(argument.premises, a.premises)
                 and argument.conclusions[0].statement == a.conclusions[0].statement
-                and argument.conclusions[0].is_true != a.conclusions[0].is_true
+                and argument.conclusions[0].category != a.conclusions[0].category
             )
             for argument in arguments
         ]
@@ -88,9 +103,17 @@ def postprocess(arguments: List[Argument]) -> List[Argument]:
 
 
 def is_consistent(facts: List[Fact]) -> bool:
-    true_names = {fact.statement for fact in facts if fact.is_true}
-    false_names = {fact.statement for fact in facts if not fact.is_true}
-    return len(true_names.intersection(false_names)) == 0
+    return all(
+        [
+            [
+                implies(
+                    fact1.statement == fact2.statement, fact1.category != fact2.category
+                )
+                for fact1 in facts
+            ]
+            for fact2 in facts
+        ]
+    )
 
 
 def premise_candidates_(
@@ -98,7 +121,7 @@ def premise_candidates_(
 ) -> Set[FrozenSet[Fact]]:
     return {
         frozenset({fact, *premises})
-        for fact in fact_candidates(names(case_model))
+        for fact in fact_candidates(namesAndCategories(case_model))
         if fact.statement != conclusion.statement
         and fact.statement not in {p.statement for p in premises}
     }

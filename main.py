@@ -22,8 +22,8 @@ if __name__ == "__main__":
     print("Number of arguments:", theory.size)
     for col in range(len(columns)):
         l: List[bool] = []
-        for i in train.index:
-            values = list(train.loc[i])
+        for i in test.index:
+            values = list(test.loc[i])
             # Try to predict each column where the values of all other columns are known.
             X, y = values[:col] + values[col + 1:], values[col]
 

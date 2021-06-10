@@ -2,7 +2,7 @@ from logic import *
 from learning_helpers import *
 from typing import *
 import itertools as it
-
+from operator import attrgetter
 
 @dataclass
 class Theory:
@@ -40,10 +40,16 @@ class Theory:
     def predict(
             self, known_facts: List[Fact], unknown_fact: str
     ) -> Optional[Tuple[Fact, Argument]]:
+        conclusive_args, presumptively_valid_args = [], []
         for argument in self.conclusive_arguments:
             if self.is_applicable(known_facts, unknown_fact, argument):
-                return self.apply_argument(unknown_fact, argument), argument
+                conclusive_args.append(argument)
+            if conclusive_args:
+                selected_arg = max(conclusive_args, key=lambda item: len(item.premises))
+                # return self.apply_argument(unknown_fact, argument), argument
+                return self.apply_argument(unknown_fact, selected_arg), selected_arg
         for argument in self.presumptively_valid_arguments:
+
             other_arguments = [
                 a
                 for a in self.conclusive_arguments + self.presumptively_valid_arguments
@@ -52,7 +58,11 @@ class Theory:
             if self.is_applicable(known_facts, unknown_fact, argument) and not self.is_defeated(
                     known_facts, unknown_fact, argument, other_arguments
             ):
-                return self.apply_argument(unknown_fact, argument), argument
+                presumptively_valid_args.append(argument)
+            if presumptively_valid_args:
+                selected_arg = max(presumptively_valid_args, key=lambda item: len(item.premises))
+                return self.apply_argument(unknown_fact, selected_arg), selected_arg
+                # return self.apply_argument(unknown_fact, argument), argument
         return None
 
     @staticmethod
@@ -84,7 +94,7 @@ class Theory:
 
     @staticmethod
     def learn_with_pruned_search(
-            case_model: CaseModel, depth: int = 100, log: bool = False
+            case_model: CaseModel, depth: int = 5, log: bool = False
     ) -> "Theory":
         theory = Theory.union(
             *[

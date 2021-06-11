@@ -5,6 +5,7 @@ from multiprocessing import Pool
 from re import split
 from functools import cached_property
 from helpers import subset, proper_subset, implies
+import itertools as it
 
 
 @dataclass(frozen=True)
@@ -38,6 +39,7 @@ class Fact:
                 return Fact(str[1:], "false")
             else:
                 return Fact(str, "true")
+
 
 
 @dataclass(frozen=True)
@@ -117,14 +119,14 @@ class Argument:
         )
 
     def is_defeated_by_in(
-        self, circumstances: List[Fact], case_model: "CaseModel"
+            self, circumstances: List[Fact], case_model: "CaseModel"
     ) -> bool:
         return self.is_presumptively_valid_in(case_model) and not Argument(
             self.premises + circumstances, self.conclusions
         ).is_presumptively_valid_in(case_model)
 
     def is_rebutted_by_in(
-        self, circumstances: List[Fact], case_model: "CaseModel"
+            self, circumstances: List[Fact], case_model: "CaseModel"
     ) -> bool:
         def is_rebutted(fact: Fact) -> bool:
             return any(
@@ -141,19 +143,41 @@ class Argument:
         )
 
     def is_undercut_by_in(
-        self, circumstances: List[Fact], case_model: "CaseModel"
+            self, circumstances: List[Fact], case_model: "CaseModel"
     ) -> bool:
         return self.is_defeated_by_in(
             circumstances, case_model
         ) and not self.is_rebutted_by_in(circumstances, case_model)
 
     def is_excluded_by_in(
-        self, circumstances: List[Fact], case_model: "CaseModel"
+            self, circumstances: List[Fact], case_model: "CaseModel"
     ) -> bool:
         return not (
             Argument(self.premises + circumstances, self.conclusions).is_coherent_in(
                 case_model
             )
+        )
+
+    def is_overly_specific(self, arguments: List['Argument']) -> bool:
+        return any(
+            [(proper_subset(argument.premises, self.premises) and set(argument.conclusions) == set(self.conclusions))
+             for argument in arguments])
+
+    def is_relevant(self, others: List['Argument']) -> bool:
+        return (not self.is_overly_specific(others)) or self.is_an_exception(others)
+
+    def is_an_exception(self, arguments: List['Argument']) -> bool:
+        # assumes that every argument only has 1 conclusion
+        assert all([len(arg.conclusions) == 1 for arg in [self, *arguments]])
+        return any(
+            [
+                (
+                        proper_subset(argument.premises, self.premises)
+                        and argument.conclusions[0].statement == self.conclusions[0].statement
+                        and argument.conclusions[0].is_true != self.conclusions[0].is_true
+                )
+                for argument in arguments
+            ]
         )
 
 
@@ -204,8 +228,8 @@ def check_cases(cases_list, complete_case_list):
             assert case1 == case2, "Case Model not valid, condition 3 was violated"
             # This is trivial
         if not (
-            case1.probability >= case2.probability
-            or case1.probability <= case2.probability
+                case1.probability >= case2.probability
+                or case1.probability <= case2.probability
         ):
             assert False, "Case Model not valid, condition 4 was violated"
 
@@ -257,3 +281,7 @@ class CaseModel:
                 elif case.probability == max_probability:
                     most_preferred_cases.append(case)
         return most_preferred_cases
+
+    @property
+    def names(self) -> List[str]:
+        return list(set(it.chain(*[[fact.statement for fact in case.facts] for case in self.cases])))

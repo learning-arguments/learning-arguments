@@ -2,7 +2,7 @@ from logic import *
 from learning_helpers import *
 from typing import *
 import itertools as it
-
+from operator import attrgetter
 
 @dataclass
 class Theory:
@@ -13,10 +13,10 @@ class Theory:
     coherent_arguments: List[Argument]
 
     def __repr__(
-        self,
-        conclusive_arguments=True,
-        presumptively_valid_arguments=True,
-        coherent_arguments=False,
+            self,
+            conclusive_arguments=True,
+            presumptively_valid_arguments=True,
+            coherent_arguments=False,
     ) -> str:
         s = ""
         if conclusive_arguments:
@@ -30,26 +30,39 @@ class Theory:
                 s += a.toStr(arrow="<:")
         return s
 
+    def __add__(self, other):
+        return self.union([self, other])
+
     @property
     def size(self):
         return len(self.conclusive_arguments) + len(self.presumptively_valid_arguments)
 
     def predict(
-        self, known_facts: List[Fact], unknown_fact: str
+            self, known_facts: List[Fact], unknown_fact: str
     ) -> Optional[Tuple[Fact, Argument]]:
+        conclusive_args, presumptively_valid_args = [], []
         for argument in self.conclusive_arguments:
-            if is_applicable(known_facts, unknown_fact, argument):
-                return apply_argument(unknown_fact, argument), argument
+            if self.is_applicable(known_facts, unknown_fact, argument):
+                conclusive_args.append(argument)
+            if conclusive_args:
+                selected_arg = max(conclusive_args, key=lambda item: len(item.premises))
+                # return self.apply_argument(unknown_fact, argument), argument
+                return self.apply_argument(unknown_fact, selected_arg), selected_arg
         for argument in self.presumptively_valid_arguments:
+
             other_arguments = [
                 a
                 for a in self.conclusive_arguments + self.presumptively_valid_arguments
                 if a != argument
             ]
-            if is_applicable(known_facts, unknown_fact, argument) and not is_defeated(
-                known_facts, unknown_fact, argument, other_arguments
+            if self.is_applicable(known_facts, unknown_fact, argument) and not self.is_defeated(
+                    known_facts, unknown_fact, argument, other_arguments
             ):
-                return apply_argument(unknown_fact, argument), argument
+                presumptively_valid_args.append(argument)
+            if presumptively_valid_args:
+                selected_arg = max(presumptively_valid_args, key=lambda item: len(item.premises))
+                return self.apply_argument(unknown_fact, selected_arg), selected_arg
+                # return self.apply_argument(unknown_fact, argument), argument
         return None
 
     @staticmethod
@@ -145,19 +158,19 @@ class Theory:
             for subset in premise_candidates:
                 argument = Argument(list(subset), [conclusion])
                 if argument.is_conclusive_in(case_model) and (
-                    not is_overly_specific(argument, theory.conclusive_arguments)
-                    or is_an_exception(argument, theory.presumptively_valid_arguments)
+                        not argument.is_overly_specific(theory.conclusive_arguments)
+                        or argument.is_an_exception(theory.presumptively_valid_arguments)
                 ):
                     theory.conclusive_arguments.append(argument)
                 else:
                     earlier_args = (
-                        theory.conclusive_arguments
-                        + theory.presumptively_valid_arguments
+                            theory.conclusive_arguments
+                            + theory.presumptively_valid_arguments
                     )
                     if (
-                        argument.is_presumptively_valid_in(case_model)
-                        and not is_overly_specific(argument, earlier_args)
-                        and depth > 0
+                            argument.is_presumptively_valid_in(case_model)
+                            and not argument.is_overly_specific(earlier_args)
+                            and depth > 0
                     ):
                         theory.presumptively_valid_arguments.append(argument)
                         if depth > 1:
@@ -183,3 +196,33 @@ class Theory:
             premise_size += 1
             premise_candidates = more_specific_sets(next_premise_candidates)
         return theory
+
+    def is_defeated(self,
+                    known_facts: List[Fact],
+                    unknown_fact: str,
+                    argument: Argument,
+                    other_arguments: List[Argument],
+                    ):
+        prediction = self.apply_argument(unknown_fact, argument)
+        any(
+            [
+                self.is_more_specific(other_argument, argument)
+                and self.is_applicable(known_facts, unknown_fact, other_argument)
+                and self.apply_argument(unknown_fact, other_argument) != prediction
+                for other_argument in other_arguments
+            ]
+        )
+
+    @staticmethod
+    def is_applicable(known_facts: List[Fact], unknown_fact: str, arg: Argument):
+        return subset(arg.premises, known_facts) and unknown_fact in [
+            fact.statement for fact in arg.conclusions
+        ]
+
+    @staticmethod
+    def apply_argument(unknown_fact: str, arg: Argument) -> Fact:
+        return next(fact for fact in arg.conclusions if fact.statement == unknown_fact)
+
+    @staticmethod
+    def is_more_specific(a: Argument, b: Argument) -> bool:
+        return subset(b.premises, a.premises)

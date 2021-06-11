@@ -34,54 +34,8 @@ def candidate_arguments(columns: Dict[str, FrozenSet[str]]) -> List[Argument]:
     ]
 
 
-def namesAndCategories(case_model: CaseModel) -> Dict[str, FrozenSet[str]]:
-    return dict(
-        set(
-            it.chain(
-                *[
-                    [(fact.statement, fact.categories) for fact in case.facts]
-                    for case in case_model.cases
-                ]
-            )
-        )
-    )
-
-
-def is_overly_specific(a: Argument, arguments: List[Argument]) -> bool:
-    return any(
-        [
-            (
-                proper_subset(argument.premises, a.premises)
-                and set(argument.conclusions) == set(a.conclusions)
-            )
-            for argument in arguments
-        ]
-    )
-
-
-def is_an_exception(a: Argument, arguments: List[Argument]) -> bool:
-    # assumes that every argument only has 1 conclusion
-    assert all([len(arg.conclusions) == 1 for arg in [a, *arguments]])
-    return any(
-        [
-            (
-                proper_subset(argument.premises, a.premises)
-                and argument.conclusions[0].statement == a.conclusions[0].statement
-                and argument.conclusions[0].category != a.conclusions[0].category
-            )
-            for argument in arguments
-        ]
-    )
-
-
-def is_relevant(argument: Argument, others: List[Argument]) -> bool:
-    return (not is_overly_specific(argument, others)) or is_an_exception(
-        argument, others
-    )
-
-
 def filter_arguments(arguments: List[Argument]) -> List[Argument]:
-    return [a for a in arguments if is_relevant(a, arguments)]
+    return [a for a in arguments if a.is_relevant(arguments)]
 
 
 def join_arguments(arguments: List[Argument]) -> List[Argument]:
@@ -117,13 +71,13 @@ def is_consistent(facts: List[Fact]) -> bool:
 
 
 def premise_candidates_(
-    conclusion: Fact, premises: List[Fact], case_model: CaseModel
+        conclusion: Fact, premises: List[Fact], case_model: CaseModel
 ) -> Set[FrozenSet[Fact]]:
     return {
         frozenset({fact, *premises})
         for fact in fact_candidates(namesAndCategories(case_model))
         if fact.statement != conclusion.statement
-        and fact.statement not in {p.statement for p in premises}
+           and fact.statement not in {p.statement for p in premises}
     }
 
 
@@ -141,34 +95,3 @@ def more_specific_sets(subsets: Set[FrozenSet[Fact]]) -> Set[FrozenSet[Fact]]:
         for (a, b) in list(it.combinations(subsets, 2))
         if len(a.symmetric_difference(b)) == 2
     }
-
-
-def is_applicable(known_facts: List[Fact], unknown_fact: str, arg: Argument):
-    return subset(arg.premises, known_facts) and unknown_fact in [
-        fact.statement for fact in arg.conclusions
-    ]
-
-
-def apply_argument(unknown_fact: str, arg: Argument) -> Fact:
-    return next(fact for fact in arg.conclusions if fact.statement == unknown_fact)
-
-
-def is_more_specific(a: Argument, b: Argument) -> bool:
-    return subset(b.premises, a.premises)
-
-
-def is_defeated(
-    known_facts: List[Fact],
-    unknown_fact: str,
-    argument: Argument,
-    other_arguments: List[Argument],
-):
-    prediction = apply_argument(unknown_fact, argument)
-    any(
-        [
-            is_more_specific(other_argument, argument)
-            and is_applicable(known_facts, unknown_fact, other_argument)
-            and apply_argument(unknown_fact, other_argument) != prediction
-            for other_argument in other_arguments
-        ]
-    )

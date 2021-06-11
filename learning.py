@@ -4,6 +4,7 @@ from typing import *
 import itertools as it
 from operator import attrgetter
 
+
 @dataclass
 class Theory:
     conclusive_arguments: List[Argument]
@@ -13,10 +14,10 @@ class Theory:
     coherent_arguments: List[Argument]
 
     def __repr__(
-            self,
-            conclusive_arguments=True,
-            presumptively_valid_arguments=True,
-            coherent_arguments=False,
+        self,
+        conclusive_arguments=True,
+        presumptively_valid_arguments=True,
+        coherent_arguments=False,
     ) -> str:
         s = ""
         if conclusive_arguments:
@@ -38,7 +39,7 @@ class Theory:
         return len(self.conclusive_arguments) + len(self.presumptively_valid_arguments)
 
     def predict(
-            self, known_facts: List[Fact], unknown_fact: str
+        self, known_facts: List[Fact], unknown_fact: str
     ) -> Optional[Tuple[Fact, Argument]]:
         conclusive_args, presumptively_valid_args = [], []
         for argument in self.conclusive_arguments:
@@ -55,12 +56,16 @@ class Theory:
                 for a in self.conclusive_arguments + self.presumptively_valid_arguments
                 if a != argument
             ]
-            if self.is_applicable(known_facts, unknown_fact, argument) and not self.is_defeated(
-                    known_facts, unknown_fact, argument, other_arguments
+            if self.is_applicable(
+                known_facts, unknown_fact, argument
+            ) and not self.is_defeated(
+                known_facts, unknown_fact, argument, other_arguments
             ):
                 presumptively_valid_args.append(argument)
             if presumptively_valid_args:
-                selected_arg = max(presumptively_valid_args, key=lambda item: len(item.premises))
+                selected_arg = max(
+                    presumptively_valid_args, key=lambda item: len(item.premises)
+                )
                 return self.apply_argument(unknown_fact, selected_arg), selected_arg
                 # return self.apply_argument(unknown_fact, argument), argument
         return None
@@ -158,19 +163,19 @@ class Theory:
             for subset in premise_candidates:
                 argument = Argument(list(subset), [conclusion])
                 if argument.is_conclusive_in(case_model) and (
-                        not argument.is_overly_specific(theory.conclusive_arguments)
-                        or argument.is_an_exception(theory.presumptively_valid_arguments)
+                    not argument.is_overly_specific(theory.conclusive_arguments)
+                    or argument.is_an_exception(theory.presumptively_valid_arguments)
                 ):
                     theory.conclusive_arguments.append(argument)
                 else:
                     earlier_args = (
-                            theory.conclusive_arguments
-                            + theory.presumptively_valid_arguments
+                        theory.conclusive_arguments
+                        + theory.presumptively_valid_arguments
                     )
                     if (
-                            argument.is_presumptively_valid_in(case_model)
-                            and not argument.is_overly_specific(earlier_args)
-                            and depth > 0
+                        argument.is_presumptively_valid_in(case_model)
+                        and not argument.is_overly_specific(earlier_args)
+                        and depth > 0
                     ):
                         theory.presumptively_valid_arguments.append(argument)
                         if depth > 1:
@@ -197,12 +202,13 @@ class Theory:
             premise_candidates = more_specific_sets(next_premise_candidates)
         return theory
 
-    def is_defeated(self,
-                    known_facts: List[Fact],
-                    unknown_fact: str,
-                    argument: Argument,
-                    other_arguments: List[Argument],
-                    ):
+    def is_defeated(
+        self,
+        known_facts: List[Fact],
+        unknown_fact: str,
+        argument: Argument,
+        other_arguments: List[Argument],
+    ):
         prediction = self.apply_argument(unknown_fact, argument)
         any(
             [

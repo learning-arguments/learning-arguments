@@ -71,13 +71,13 @@ def is_consistent(facts: List[Fact]) -> bool:
 
 
 def premise_candidates_(
-        conclusion: Fact, premises: List[Fact], case_model: CaseModel
+    conclusion: Fact, premises: List[Fact], case_model: CaseModel
 ) -> Set[FrozenSet[Fact]]:
     return {
         frozenset({fact, *premises})
         for fact in fact_candidates(namesAndCategories(case_model))
         if fact.statement != conclusion.statement
-           and fact.statement not in {p.statement for p in premises}
+        and fact.statement not in {p.statement for p in premises}
     }
 
 

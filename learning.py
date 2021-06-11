@@ -73,7 +73,7 @@ class Theory:
     @staticmethod
     def learn_with_naive_search(case_model: CaseModel) -> "Theory":
         theory = Theory([], [], [])
-        for argument in candidate_arguments(namesAndCategories(case_model)):
+        for argument in candidate_arguments(case_model.namesAndCategories):
             if argument.is_conclusive_in(case_model):
                 theory.conclusive_arguments.append(argument)
             elif argument.is_presumptively_valid_in(case_model):
@@ -109,7 +109,7 @@ class Theory:
                 Theory.init_pruned_search(
                     candidate, case_model, depth, max_premise_size, log
                 )
-                for candidate in fact_candidates(namesAndCategories(case_model))
+                for candidate in fact_candidates(case_model.namesAndCategories)
             ]
         )
         return Theory(

@@ -75,7 +75,7 @@ def premise_candidates_(
 ) -> Set[FrozenSet[Fact]]:
     return {
         frozenset({fact, *premises})
-        for fact in fact_candidates(namesAndCategories(case_model))
+        for fact in fact_candidates(case_model.namesAndCategories)
         if fact.statement != conclusion.statement
         and fact.statement not in {p.statement for p in premises}
     }

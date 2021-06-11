@@ -180,7 +180,7 @@ class Argument:
                     proper_subset(argument.premises, self.premises)
                     and argument.conclusions[0].statement
                     == self.conclusions[0].statement
-                    and argument.conclusions[0].is_true != self.conclusions[0].is_true
+                    and argument.conclusions[0].category != self.conclusions[0].category
                 )
                 for argument in arguments
             ]
@@ -289,11 +289,14 @@ class CaseModel:
         return most_preferred_cases
 
     @property
-    def names(self) -> List[str]:
-        return list(
+    def namesAndCategories(self) -> Dict[str, FrozenSet[str]]:
+        return dict(
             set(
                 it.chain(
-                    *[[fact.statement for fact in case.facts] for case in self.cases]
+                    *[
+                        [(fact.statement, fact.categories) for fact in case.facts]
+                        for case in self.cases
+                    ]
                 )
             )
         )

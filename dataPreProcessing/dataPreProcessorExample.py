@@ -30,9 +30,13 @@ test = df[train_size:]
 #
 
 import dataPreProcessor
+import time
 
 preProcessor = dataPreProcessor.dataPreProcessor()
-discretized_train = preProcessor.discretizeTrain(train, algorithm="kMeans", oneHotEncoding=False)
+start_time = time.time()
+discretized_train = preProcessor.discretizeTrain(train, algorithm="DBSCAN", oneHotEncoding=False)
+end_time = time.time()
+print("Time used to converge:", (end_time - start_time)/60, "minutes.")
 discretized_test = preProcessor.discretizeTest(test, oneHotEncoding=False)
 
 # print the rows to show off the discretization:

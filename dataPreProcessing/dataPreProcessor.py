@@ -2,6 +2,7 @@ import discretizations
 import dataEncoder
 import oneHotEncoder
 
+
 # This is the wrapper class for all of the files in this folder.
 # It allows for data discretization of the training dataframe, and also uses oneHotEncoding if specified so.
 # When new data is predicted, this class transforms the new data to the same format as the discretized training set.
@@ -28,7 +29,7 @@ class dataPreProcessor:
     def discretizeTest(self, test, oneHotEncoding=False):
         result = dataEncoder.fitToDomain(test, self.discretizedTrain, self.myCols)
 
-        #use ohe if specified so
+        # use ohe if specified so
         if oneHotEncoding:
             return oneHotEncoder.encode(result)
         return result

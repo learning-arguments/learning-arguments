@@ -1,6 +1,6 @@
-import pandas as pd
 import numpy as np
 from scipy.spatial.distance import cdist
+
 
 # converts a new (testing) set (variable X) to the same domain as the dataframe after discretization
 # variable myColumns describes the columns to be discretized in the (testing) set
@@ -23,7 +23,7 @@ def fitToDomain(X, df, myColumns):
         myCol = [""] * len(X)
 
         for i in range(len(X)):
-            #first, retrieve each value
+            # first, retrieve each value
             myValue = X[col].values[i]
 
             # retrieve the closest range
@@ -32,14 +32,13 @@ def fitToDomain(X, df, myColumns):
             # replace the value
             myCol[i] = closestRange
 
-        foo = X[col]
         result[col] = myCol
 
     return result
 
+
 # returns the range that is closest to myValue in form of a string
 def getClosestRange(myValue, ranges):
-
     # get the distances to each of the ends of the bins in the ranges
     distances = cdist([[myValue]], ranges.reshape(-1, 1)).reshape(2, len(ranges))
 

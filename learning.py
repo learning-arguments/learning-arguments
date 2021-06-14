@@ -1,8 +1,9 @@
 from logic import *
 from learning_helpers import *
 from typing import *
-import itertools as it
+from itertools import *
 from operator import attrgetter
+from hero import defeasible_theory_search
 
 
 @dataclass
@@ -69,6 +70,37 @@ class Theory:
                 return self.apply_argument(unknown_fact, selected_arg), selected_arg
                 # return self.apply_argument(unknown_fact, argument), argument
         return None
+
+    @staticmethod
+    def learn_with_hero(case_model: CaseModel) -> "Theory":
+        facts = set(
+            chain(
+                *([fact.statement for fact in case.facts] for case in case_model.cases)
+            )
+        )
+        rules = []
+        for fact in facts:
+            relevant_cases = [
+                c for c in case_model.cases if fact in [f.statement for f in c.facts]
+            ]
+            x = [
+                [str(f) for f in case.facts if f.statement != fact]
+                for case in relevant_cases
+            ]
+            y = [
+                [str(f) for f in case.facts if f.statement == fact][0]
+                for case in relevant_cases
+            ]
+            rules += defeasible_theory_search(x, y)
+        theory = Theory(
+            [],
+            [
+                Argument([Fact.fromStr(p) for p in ps], [Fact.fromStr(c)])
+                for (ps, c), _ in rules
+            ],
+            [],
+        )
+        return theory
 
     @staticmethod
     def learn_with_naive_search(case_model: CaseModel) -> "Theory":

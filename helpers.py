@@ -1,6 +1,7 @@
 from typing import *
 
 A = TypeVar("A")
+B = TypeVar("B")
 
 
 def implies(a: bool, b: bool) -> bool:
@@ -23,3 +24,16 @@ def histogram(l: List[A]) -> Dict[A, int]:
         else:
             histogram[a] = 1
     return histogram
+
+
+def unique(
+    l: List[A], f: Union[Callable[[A], B], Callable[[A], B]] = lambda x: x
+) -> List[A]:
+    # Inefficient but easy way to preserve the order.
+    m = []
+    n = []
+    for a in l:
+        if f(a) not in n:
+            m.append(a)
+            n.append(f(a))
+    return m

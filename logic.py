@@ -1,5 +1,5 @@
 from typing import *
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import combinations
 from multiprocessing import Pool
 from re import split
@@ -8,11 +8,11 @@ from helpers import subset, proper_subset, implies
 import itertools as it
 
 
-@dataclass(frozen=True)
 class Fact:
-    statement: str
-    category: str = "true"
-    categories: FrozenSet[str] = frozenset(["true", "false"])
+    def __init__(self, statement: str, category: str = "true", categories: List[str] = ["true", "false"]):
+        self.statement = statement
+        self.category = category
+        self.categories = categories
 
     def __repr__(self) -> str:
         return (
@@ -20,6 +20,12 @@ class Fact:
             if self.category == "true"
             else ("¬" if self.category == "false" else self.category + "_")
         ) + self.statement
+
+    def __hash__(self):
+        return sum([hash(self.statement), hash(self.category), *[hash(c) for c in self.categories]])
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
 
     @property
     def other_categories(self) -> List["Fact"]:
@@ -33,7 +39,7 @@ class Fact:
         if "_" in str:
             prefix, rest = str.split("_", maxsplit=1)
             assert prefix in categories
-            return Fact(rest, prefix, frozenset(categories))
+            return Fact(rest, prefix, categories)
         else:
             if str[0] == "¬" or str[0] == "~":
                 return Fact(str[1:], "false")
@@ -289,14 +295,12 @@ class CaseModel:
         return most_preferred_cases
 
     @property
-    def namesAndCategories(self) -> Dict[str, FrozenSet[str]]:
+    def namesAndCategories(self) -> Dict[str, List[str]]:
         return dict(
-            set(
-                it.chain(
-                    *[
-                        [(fact.statement, fact.categories) for fact in case.facts]
-                        for case in self.cases
-                    ]
-                )
+            it.chain(
+                *[
+                    [(fact.statement, fact.categories) for fact in case.facts]
+                    for case in self.cases
+                ]
             )
         )

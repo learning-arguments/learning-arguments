@@ -22,13 +22,13 @@ class Theory:
     ) -> str:
         s = ""
         if conclusive_arguments:
-            for a in sorted(self.conclusive_arguments, key=str):
+            for a in self.conclusive_arguments:
                 s += "\n" + str(a)
         if presumptively_valid_arguments:
-            for a in sorted(self.presumptively_valid_arguments, key=str):
+            for a in self.presumptively_valid_arguments:
                 s += "\n" + a.toStr(arrow="<~")
         if coherent_arguments:
-            for a in sorted(self.coherent_arguments, key=str):
+            for a in self.coherent_arguments:
                 s += a.toStr(arrow="<:")
         return s
 
@@ -105,7 +105,7 @@ class Theory:
     @staticmethod
     def learn_with_naive_search(case_model: CaseModel) -> "Theory":
         theory = Theory([], [], [])
-        for argument in candidate_arguments(case_model.namesAndCategories):
+        for argument in candidate_arguments(case_model.namesAndCategories): 
             if argument.is_conclusive_in(case_model):
                 theory.conclusive_arguments.append(argument)
             elif argument.is_presumptively_valid_in(case_model):
@@ -121,7 +121,7 @@ class Theory:
     @staticmethod
     def union(*theories: "Theory") -> "Theory":
         def _union(argumentLists: List[List[Argument]]) -> List[Argument]:
-            return list(it.chain(*argumentLists))
+            return sorted(it.chain(*argumentLists), key=str)
 
         return Theory(
             _union([theory.conclusive_arguments for theory in theories]),
@@ -191,7 +191,7 @@ class Theory:
         while len(premise_candidates) > 0 and (
             (premise_size <= max_premise_size) if max_premise_size is not None else True
         ):
-            next_premise_candidates = set()
+            next_premise_candidates = []
             for subset in premise_candidates:
                 argument = Argument(list(subset), [conclusion])
                 if argument.is_conclusive_in(case_model) and (
@@ -229,9 +229,9 @@ class Theory:
                     elif argument.is_coherent_in(case_model):
                         theory.coherent_arguments.append(argument)
                     if argument.is_coherent_in(case_model):
-                        next_premise_candidates.add(subset)
+                        next_premise_candidates.append(subset)
             premise_size += 1
-            premise_candidates = more_specific_sets(next_premise_candidates)
+            premise_candidates = more_specific_sets(unique(next_premise_candidates)) 
         return theory
 
     def is_defeated(

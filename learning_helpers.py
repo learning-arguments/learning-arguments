@@ -1,9 +1,10 @@
 from logic import *
 from typing import *
 import itertools as it
+from helpers import *
 
 
-def premise_candidates(columns: Dict[str, FrozenSet[str]]) -> List[List[Fact]]:
+def premise_candidates(columns: Dict[str, List[str]]) -> List[List[Fact]]:
     premise_candidates = list(
         it.product(
             *[
@@ -15,18 +16,18 @@ def premise_candidates(columns: Dict[str, FrozenSet[str]]) -> List[List[Fact]]:
     return [list(it.chain(*a)) for a in premise_candidates]
 
 
-def fact_candidates(columns: Dict[str, FrozenSet[str]]) -> List[Fact]:
+def fact_candidates(columns: Dict[str, List[str]]) -> List[Fact]:
     return list(
         it.chain(
             *[
-                [Fact(name, category, frozenset(categories)) for category in categories]
+                [Fact(name, category, categories) for category in categories]
                 for name, categories in columns.items()
             ]
         )
     )
 
 
-def candidate_arguments(columns: Dict[str, FrozenSet[str]]) -> List[Argument]:
+def candidate_arguments(columns: Dict[str, List[str]]) -> List[Argument]:
     return [
         Argument(ps, [c])
         for c, ps in it.product(fact_candidates(columns), premise_candidates(columns))
@@ -46,10 +47,13 @@ def join_arguments(arguments: List[Argument]) -> List[Argument]:
             grouped_by_premises[key] += argument.conclusions
         else:
             grouped_by_premises[key] = argument.conclusions
-    return [
-        Argument(list(premises), list(set(conclusions)))
-        for premises, conclusions in grouped_by_premises.items()
-    ]
+    return sorted(
+        [
+            Argument(list(premises), list(set(conclusions)))
+            for premises, conclusions in grouped_by_premises.items()
+        ],
+        key=str,
+    )
 
 
 def postprocess(arguments: List[Argument]) -> List[Argument]:
@@ -72,16 +76,16 @@ def is_consistent(facts: List[Fact]) -> bool:
 
 def premise_candidates_(
     conclusion: Fact, premises: List[Fact], case_model: CaseModel
-) -> Set[FrozenSet[Fact]]:
-    return {
-        frozenset({fact, *premises})
+) -> List[List[Fact]]:
+    return unique([
+        unique([fact, *premises])
         for fact in fact_candidates(case_model.namesAndCategories)
         if fact.statement != conclusion.statement
         and fact.statement not in {p.statement for p in premises}
-    }
+    ])
 
 
-def more_specific_sets(subsets: Set[FrozenSet[Fact]]) -> Set[FrozenSet[Fact]]:
+def more_specific_sets(subsets: List[List[Fact]]) -> List[List[Fact]]:
     """
     If a set contains a quality criterion (for example, conclusiveness), all its subsets must also fulfill it.
     Therefore, this function takes some sets of size n each
@@ -90,8 +94,8 @@ def more_specific_sets(subsets: Set[FrozenSet[Fact]]) -> Set[FrozenSet[Fact]]:
     -- like {{A, B, C, D, E}, {B, C, D, E, F}}
     These are all the sets of size n+1 that potentially fulfill the quality criterion.
     """
-    return {
-        a.union(b)
+    return unique([
+        unique(a+b)
         for (a, b) in list(it.combinations(subsets, 2))
-        if len(a.symmetric_difference(b)) == 2
-    }
+        if len(symmetric_difference(a, b)) == 2
+    ])

@@ -1,4 +1,6 @@
 from typing import *
+import pandas as pd
+import collections
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -16,6 +18,10 @@ def proper_subset(a: Iterable[A], b: Iterable[A]) -> bool:
     return subset(a, b) and not subset(b, a)
 
 
+def symmetric_difference(a: List[A], b: List[A]) -> List[A]:
+    return [x for x in a + b if (x not in a) or (x not in b)]
+
+
 def histogram(l: List[A]) -> Dict[A, int]:
     histogram: Dict[A, int] = dict()
     for a in l:
@@ -29,11 +35,14 @@ def histogram(l: List[A]) -> Dict[A, int]:
 def unique(
     l: List[A], f: Union[Callable[[A], B], Callable[[A], B]] = lambda x: x
 ) -> List[A]:
-    # Inefficient but easy way to preserve the order.
-    m = []
-    n = []
-    for a in l:
-        if f(a) not in n:
-            m.append(a)
-            n.append(f(a))
-    return m
+    if isinstance(l, collections.Hashable):
+        return list(pd.unique(pd.Series(l)))
+    else:
+        # Inefficient but easy way to preserve the order.
+        m = []
+        n = []
+        for a in l:
+            if f(a) not in n:
+                m.append(a)
+                n.append(f(a))
+        return m

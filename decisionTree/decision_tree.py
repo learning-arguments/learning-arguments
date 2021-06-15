@@ -1,13 +1,15 @@
+# this file is a demo of what decision trees are capable of doing when it comes to rule-mining.
+# to classify a new dataset, the file "decisionTreeClassifier" can be used
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-import seaborn as sns
 import time
 
-from definitions import *
+import logic
 
-myDataPath = "data\weatherAUS.csv"
+myDataPath = "..\data\weatherAUS.csv"
 
 df = pd.read_csv(myDataPath)
 
@@ -58,9 +60,10 @@ print('Performance of the vanilla decision tree model:', acc)
 from skopt import BayesSearchCV
 from skopt.space import Integer
 
+
 search_spaces = {
-    'max_depth': Integer(1, 40),
-    'max_features': Integer(1, 92),
+    'max_depth': Integer(1, 50),
+    'max_features': Integer(1, X.shape[1]),
     'min_samples_leaf': Integer(1, 1000),
     'min_samples_split': Integer(2, 1000)
 }
@@ -220,4 +223,4 @@ for r in rules:
 
 myArguments = list()
 for r in rules:
-    myArguments.append(Argument.fromStr(r))
+    myArguments.append(logic.Argument.fromStr(r))

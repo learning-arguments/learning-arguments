@@ -1,9 +1,11 @@
 from load_data import load_csv_data, bin_data_set, generate_case_model, bin_labels
 from learning import Theory
-from helpers import histogram
-from logic import Fact, Argument
+from logic import Fact
 from sklearn.model_selection import train_test_split
 from typing import *
+from decisionTree.decisionTreeClassifier import decisionTreeClassifier
+from dataPreProcessing.oneHotEncoder import encode
+import pandas as pd
 
 if __name__ == "__main__":
     boston_housing_data_raw = load_csv_data("BostonHousing.csv")
@@ -16,22 +18,31 @@ if __name__ == "__main__":
     categories = dict([(column, bin_labels(n_bins)) for column in columns])
     case_model = generate_case_model(train, categories)
 
+
+    #with open("output/BostonHousing.verheij", "w") as file:
+    #    file.write(str(theory).encode("utf-8").decode("utf-8"))
+
+    decisionTree = decisionTreeClassifier()
+    col = 'medv'
+    col_idx = list(train.columns).index(col)
+    X, y = train.loc[:, train.columns != col], pd.DataFrame(train[col])
+    decisionTree.trainDecTree(encode(X), encode(y))
+
     # Training
     theory = Theory.learn_with_pruned_search(
         case_model, depth=4, max_premise_size=4, log=True
     )
     print(theory)
-    with open("output/BostonHousing.verheij", "w") as file:
-        file.write(str(theory))
+
 
     # Evaluation
     print("Number of arguments:", theory.size)
     col = len(columns) - 1
-    l: List[bool] = []
+    l: List[bool] = []    
     for i in train.index:
         values = list(train.loc[i])
         # Try to predict each column where the values of all other columns are known.
-        X, y = values[:col] + values[col + 1 :], values[col]
+        #X, y = values[:col] + values[col + 1 :], values[col]
         known_facts = [Fact.fromStr(s, categories[s.split("_", 1)[1]]) for s in X]
         unknown_fact = columns[col]
         prediction = theory.predict(

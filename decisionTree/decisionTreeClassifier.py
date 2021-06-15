@@ -5,6 +5,7 @@ from skopt import BayesSearchCV
 from skopt.space import Integer
 from skopt.plots import plot_objective
 
+
 # this class performs rule-mining based on decision trees
 # note: to train the decision trees, discretization of the data is not required
 # however, oneHotEncoding is required
@@ -39,7 +40,7 @@ class decisionTreeClassifier:
         opt.fit(X, y)
 
         end_time = time.time()
-        print("Time used for Tuning the model:", (end_time - start_time) / 60, "minutes.")
+        print("Time used for Tuning the model: %.2f minutes." % ((end_time - start_time) / 60))
 
         params = opt.best_params_
 
@@ -50,6 +51,7 @@ class decisionTreeClassifier:
                            n_minimum_search=int(1e8))
 
         plt.savefig("hyperVisualizations/parameterAccuracies.png", bbox_inches='tight')
+        plt.close()
 
     def predict(self, X):
         return self.clf.predict(X)

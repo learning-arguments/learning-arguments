@@ -77,12 +77,12 @@ def is_consistent(facts: List[Fact]) -> bool:
 def premise_candidates_(
     conclusion: Fact, premises: List[Fact], case_model: CaseModel
 ) -> List[List[Fact]]:
-    return unique([
+    return [
         unique([fact, *premises])
         for fact in fact_candidates(case_model.namesAndCategories)
         if fact.statement != conclusion.statement
         and fact.statement not in {p.statement for p in premises}
-    ])
+    ]
 
 
 def more_specific_sets(subsets: List[List[Fact]]) -> List[List[Fact]]:
@@ -94,8 +94,8 @@ def more_specific_sets(subsets: List[List[Fact]]) -> List[List[Fact]]:
     -- like {{A, B, C, D, E}, {B, C, D, E, F}}
     These are all the sets of size n+1 that potentially fulfill the quality criterion.
     """
-    return unique([
+    return [
         unique(a+b)
         for (a, b) in list(it.combinations(subsets, 2))
         if len(symmetric_difference(a, b)) == 2
-    ])
+    ]

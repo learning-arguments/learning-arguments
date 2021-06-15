@@ -231,7 +231,7 @@ class Theory:
                     if argument.is_coherent_in(case_model):
                         next_premise_candidates.append(subset)
             premise_size += 1
-            premise_candidates = more_specific_sets(unique(next_premise_candidates)) 
+            premise_candidates = more_specific_sets(next_premise_candidates)
         return theory
 
     def is_defeated(

@@ -32,17 +32,5 @@ def histogram(l: List[A]) -> Dict[A, int]:
     return histogram
 
 
-def unique(
-    l: List[A], f: Union[Callable[[A], B], Callable[[A], B]] = lambda x: x
-) -> List[A]:
-    if isinstance(l, collections.Hashable):
-        return list(pd.unique(pd.Series(l)))
-    else:
-        # Inefficient but easy way to preserve the order.
-        m = []
-        n = []
-        for a in l:
-            if f(a) not in n:
-                m.append(a)
-                n.append(f(a))
-        return m
+def unique(l) -> List[A]:  # Input type: list of comparables
+    return sorted(set(l), key=str)

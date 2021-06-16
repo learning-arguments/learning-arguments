@@ -1,4 +1,4 @@
-import discretizations
+from dataPreProcessing.discretizations import discretizations
 import dataEncoder
 import oneHotEncoder
 

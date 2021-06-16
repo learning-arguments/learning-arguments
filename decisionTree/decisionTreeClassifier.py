@@ -43,7 +43,8 @@ class decisionTreeClassifier:
 
         params = opt.best_params_
 
-        clf = tree.DecisionTreeClassifier(**params, random_state=0)
+        self.clf = tree.DecisionTreeClassifier(**params, random_state=0)
+        self.clf.fit(X, y)
 
         _ = plot_objective(opt.optimizer_results_[0],
                            dimensions=["max_depth", "max_features", "min_samples_leaf", "min_samples_split"],

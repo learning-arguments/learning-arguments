@@ -34,17 +34,17 @@ class decisionTreeClassifier:
             n_jobs=-1,
             refit=False)
 
-        print('Bayesian Optimization will require', opt.total_iterations, 'iterations.\n')
+        #print('Bayesian Optimization will require', opt.total_iterations, 'iterations.\n')
 
         start_time = time.time()
         opt.fit(X, y)
-
         end_time = time.time()
-        print("Time used for Tuning the model: %.2f minutes." % ((end_time - start_time) / 60))
+        #print("Time used for Tuning the model: %.2f minutes." % ((end_time - start_time) / 60))
 
         params = opt.best_params_
 
-        clf = tree.DecisionTreeClassifier(**params, random_state=0)
+        self.clf = tree.DecisionTreeClassifier(**params, random_state=0)
+        self.clf.fit(X,y)
 
         _ = plot_objective(opt.optimizer_results_[0],
                            dimensions=["max_depth", "max_features", "min_samples_leaf", "min_samples_split"],

@@ -139,7 +139,7 @@ def predict(facts: List[Fact], theory: Theory) -> Optional[Conclusion]:
     ]
     if len(applicable_rules) == 0:
         return None
-    strongest_applicable_position = max(applicable_rules, key=lambda x: x[1])[1]
+    strongest_applicable_position = max(applicable_rules, key=lambda x: x[1    ])[1]
     strongest_applicable_rules = [
         (rule, position)
         for rule, position in applicable_rules

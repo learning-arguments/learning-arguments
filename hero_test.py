@@ -39,7 +39,7 @@ def test_data_set():
     df = load_csv_data("BostonHousing.csv")
     n_bins = 3
     binned_data = bin_data_set(df, n_bins=n_bins)
-    columns = list(binned_data.columns[11:14])
+    columns = list(binned_data.columns[10:14])
     df = binned_data[columns]
     train, test = train_test_split(df, test_size=0.95, random_state=1)
     train, test = train.values.tolist(), test.values.tolist()

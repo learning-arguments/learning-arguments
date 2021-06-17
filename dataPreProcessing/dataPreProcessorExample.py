@@ -18,7 +18,7 @@ df = df.head(500)
 df['year'] = pd.DatetimeIndex(df['Date']).year
 df['month'] = pd.DatetimeIndex(df['Date']).month
 df['day'] = pd.DatetimeIndex(df['Date']).day
-df.drop(columns=["Date"], inplace=True)
+df = df.drop(columns=["Date"])
 
 # split into train and test
 train_size = int(len(df) * 0.8)
@@ -34,13 +34,13 @@ import time
 
 preProcessor = dataPreProcessor.dataPreProcessor()
 start_time = time.time()
-discretized_train = preProcessor.discretizeTrain(train, algorithm="DBSCAN", oneHotEncoding=False)
+discretized_train = preProcessor.discretizeTrain(train, algorithm="EDBinning", oneHotEncoding=False)
 end_time = time.time()
 print("Time used to converge:", (end_time - start_time)/60, "minutes.")
 discretized_test = preProcessor.discretizeTest(test, oneHotEncoding=False)
 
 # print the rows to show off the discretization:
-rows_shown = 10
+rows_shown = 20
 pd.set_option('display.max_columns', 7)
 print("Original training data:")
 print(train.head(rows_shown))

@@ -1,10 +1,10 @@
+import warnings
+
+import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import MinMaxScaler
-import numpy as np
-import warnings
 
-from skopt import BayesSearchCV
 
 # discretizes a column of the dataframe
 def transformCol(myData):
@@ -14,13 +14,14 @@ def transformCol(myData):
     minMinSamples = 1
     maxMinSamples = len(myData)/2
 
-    bestScore = 0.0
+    bestScore = -float('inf')
     bestEps = 0.0
     bestMinSamples = 0
 
     epss = np.linspace(minEps, maxEps, 51)
     min_samples = np.linspace(minMinSamples, maxMinSamples, 100)
 
+    # for this entire search space, we perform gridsearch to find the best parameters
     for i in range(len(epss)):
         for j in range(len(min_samples)):
             dbSCAN = DBSCAN(eps = epss[i], min_samples = min_samples[j])
@@ -35,14 +36,14 @@ def transformCol(myData):
                     bestEps = epss[i]
                     bestMinSamples = min_samples[j]
 
-    # best number of cluster has been found, now find the ranges that the cluster spans
+    # parameter tuning is finished, make clusters using the best parameters
     dbSCAN = DBSCAN(bestEps, bestMinSamples)
     myDataNormalized = MinMaxScaler().fit_transform(myData)
     predictions = dbSCAN.fit_predict(myDataNormalized)
 
     clusterIndices = np.unique(predictions)
 
-    # For each outlier, we create a new cluster to assign it to
+    # additionally, for each outlier, we create a new cluster to assign it to
     if np.isin(-1, clusterIndices):
 
         myCluster = clusterIndices.max() + 1
@@ -54,6 +55,7 @@ def transformCol(myData):
     numClusters = len(np.unique(predictions))
     clusters = [0] * numClusters
 
+    # create ranges for each cluster and assign for each datapoint
     for i in range(0, numClusters):
         # for the current cluster, find the indices of the datapoints that belong to this cluster
         myClusterIndices = np.where(predictions == i)
@@ -78,9 +80,6 @@ def transformCol(myData):
 class DBSCANClustering:
     def __init__(self):
         pass
-
-    def fit(self, X, y=None):
-        return self
 
     def transform(self, X, y=None):
         result = X.copy()

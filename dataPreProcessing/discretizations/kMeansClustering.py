@@ -4,9 +4,8 @@ import numpy as np
 import warnings
 
 # discretizes a column of the dataframe
-# to use other methods of discretiation, this method should be overwritten
 def transformCol(myData):
-    bestScore = 0.0
+    bestScore = -float('inf')
     bestK = 0.0
 
     # find the best number of clusters
@@ -15,7 +14,8 @@ def transformCol(myData):
         y = kMeans.fit_predict(myData)
 
         # silhouette score only works when more than one cluster is found by the algorithm
-        # even if k > 1, the algorithm can return one cluster if centroids converge sufficiently close
+        # even if numbers of clusters k > 1,
+        # the algorithm can return one cluster if centroids converge closely
         if len(np.unique(y)) != 1:
             score = silhouette_score(myData, kMeans.labels_)
 
@@ -23,7 +23,7 @@ def transformCol(myData):
                 bestScore = score
                 bestK = k
 
-    # best number of cluster has been found, now find the ranges that the cluster spans
+    # parameter tuning is finished, make clusters using the best parameters
     kMeans = KMeans(n_clusters=bestK, random_state=42)
     predictions = kMeans.fit_predict(myData)
     clusters = [0] * bestK

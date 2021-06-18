@@ -26,9 +26,9 @@ def evaluate_decision_trees(data_set: pd.DataFrame, target_column: str, decision
         decision_tree = decisionTreeClassifier()
         decision_tree.trainDecTree(encode(X), encode(y))
         t2 = time.time()
-        model_eval = {'training_runtime': (t2 - t1)}
+        model_eval = {'training_runtime': (t2 - t1), 'model_type': 'decision tree'}
     else:
-        model_eval = {'training_runtime': 0}
+        model_eval = {'training_runtime': 0, 'model_type': 'decision tree'}
 
     y_hat = decision_tree.predict(encode(X))
 
@@ -47,9 +47,9 @@ def evaluate_rule_mining(data_set, categories, unknown_fact, search_depth=100, m
         theory = Theory.learn_with_pruned_search(case_model, depth=search_depth,
                                                  max_premise_size=max_premise_size, log=False)
         t2 = time.time()
-        model_eval = {'training_runtime': (t2 - t1)}
+        model_eval = {'training_runtime': (t2 - t1), 'model_type': 'rule mining'}
     else:
-        model_eval = {'training_runtime': 0}
+        model_eval = {'training_runtime': 0, 'model_type': 'rule mining'}
 
     y_hat, y_ = [], []
     for i in data_set.index:

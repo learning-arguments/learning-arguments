@@ -1,4 +1,5 @@
 from load_data import load_csv_data, bin_data_set, bin_labels
+import dataPreProcessing.discretizations.discretizations
 from sklearn.model_selection import train_test_split
 from evaluation import evaluate_decision_trees, evaluate_rule_mining, evaluate_hero_algorithm
 from itertools import product
@@ -64,8 +65,18 @@ if __name__ == "__main__":
     undiscretized_data = False
 
     if undiscretized_data:
+
         target_col = 'medv'
         boston_housing_data_raw = load_csv_data("BostonHousing.csv")
+
+        # choose one of the algorithms here to discretize the target values
+        myAlgorithm = 'kMeans'
+        # discretizing only works on dataframes so we need to cast it
+        myData = pd.DataFrame(boston_housing_data_raw[target_col])
+        # discretize the target column:
+        boston_housing_data_raw[target_col] = \
+            dataPreProcessing.discretizations.discretizations.discretize(myData, myAlgorithm)
+
         columns = list(boston_housing_data_raw.columns[10:14])
         train, test = train_test_split(boston_housing_data_raw[columns], test_size=0.2, random_state=1)
         model_eval_dt_train, decision_tree = evaluate_decision_trees(train, target_col)

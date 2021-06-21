@@ -55,14 +55,14 @@ def evaluate_rule_mining(data_set, categories, unknown_fact, search_depth=100, m
     for i in data_set.index:
         # Try to predict each column where the values of all other columns are known.
         X, y = data_set.loc[i, data_set.columns != unknown_fact], data_set[unknown_fact].loc[i]
-        known_facts = [Fact.fromStr(s, categories[s.split("_", 1)[1]]) for s in X]
+        known_facts = [Fact.fromStr(s, categories[s.rsplit("_", 1)[1]]) for s in X]
 
         prediction = theory.predict(
             known_facts,
             unknown_fact,
         )
         if isinstance(prediction, tuple):
-            y_i = Fact.fromStr(y, categories[y.split("_", 1)[1]])
+            y_i = Fact.fromStr(y, categories[y.rsplit("_", 1)[1]])
             y_hat_i, argument = prediction
             y_hat.append(str(y_hat_i))
             y_.append(str(y_i))

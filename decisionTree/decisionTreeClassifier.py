@@ -4,6 +4,7 @@ import time
 from skopt import BayesSearchCV
 from skopt.space import Integer
 from skopt.plots import plot_objective
+from pathlib import Path
 
 
 # this class performs rule-mining based on decision trees
@@ -49,6 +50,7 @@ class decisionTreeClassifier:
                            dimensions=["max_depth", "max_features", "min_samples_leaf", "min_samples_split"],
                            n_minimum_search=int(1e8))
 
+        Path("hyperVisualizations").mkdir(exist_ok=True)
         plt.savefig("hyperVisualizations/parameterAccuracies.png", bbox_inches='tight')
         plt.close()
 

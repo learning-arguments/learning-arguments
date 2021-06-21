@@ -16,7 +16,7 @@ Theory = List[Tuple[Rule, Position]]
 
 def defeasible_theory_search(x: X, y: Y) -> Theory:
     premise_literals: List[Fact] = unique(list(chain(*x)))
-    conclusion_literals = unique(y)
+    conclusion_literals: List[Fact] = unique(y)
     theory: Theory = []
     while True:
         rule = rule_search(premise_literals, conclusion_literals, theory, x, y)
@@ -82,16 +82,6 @@ def compute(
     x: X,
     y: Y,
 ) -> Tuple[Conclusion, float, float]:
-    # print(
-    #     [
-    #         (
-    #             c,
-    #             gain((premise, c), position, theory, x, y),
-    #             max_gain((premise, c), position, theory, x, y),
-    #         )
-    #         for c in conclusion_literals
-    #     ],
-    # )
     preferred_conclusion, gain_, _ = max(
         [
             (

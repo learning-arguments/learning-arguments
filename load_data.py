@@ -61,7 +61,7 @@ def generate_case_model(
             Case(
                 probability=count / len(binned_data),
                 facts=[
-                    Fact.fromStr(fact, categories[fact.split("_", 1)[1]])
+                    Fact.fromStr(fact, categories[fact.rsplit("_", 1)[1]])
                     for fact in facts
                 ],
             )

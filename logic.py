@@ -37,7 +37,7 @@ class Fact:
     @staticmethod
     def fromStr(str: str, categories: List[str] = ["true", "false"]) -> "Fact":
         if "_" in str:
-            prefix, rest = str.split("_", maxsplit=1)
+            prefix, rest = str.rsplit("_", maxsplit=1)
             assert prefix in categories
             return Fact(rest, prefix, categories)
         else:

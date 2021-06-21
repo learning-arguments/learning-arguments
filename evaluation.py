@@ -18,24 +18,25 @@ def compute_performance_metrics(y, y_hat):
     return {'Acc': accuracy_score(y, y_hat), 'F1': f1_score(y, y_hat, average='weighted')}
 
 
-def evaluate_decision_trees(data_set: pd.DataFrame, target_column: str, decision_tree: decisionTreeClassifier = None):
-    X, y = data_set.loc[:, data_set.columns != target_column], pd.DataFrame(data_set[target_column])
+def evaluate_decision_trees(data_set: pd.DataFrame, target_column: list, data_columns: list, hyper_parameters: dict,
+                            decision_tree: decisionTreeClassifier = None):
+    X, y = data_set[data_columns], data_set[target_column]
 
     if decision_tree is None:
         t1 = time.time()
         decision_tree = decisionTreeClassifier()
-        decision_tree.trainDecTree(encode(X), encode(y))
+        decision_tree.trainDecTree(X, y)
         t2 = time.time()
-        model_eval = {'training_runtime': (t2 - t1), 'model_type': 'decision tree'}
+        model_eval = {'training_runtime': (t2 - t1), 'model_type': 'decision tree', 'data_type': 'train'}
     else:
-        model_eval = {'training_runtime': 0, 'model_type': 'decision tree'}
+        model_eval = {'training_runtime': 0, 'model_type': 'decision tree', 'data_type': 'test'}
 
-    y_hat = decision_tree.predict(encode(X))
+    y_hat = decision_tree.predict(X)
 
-    performance_metrics = compute_performance_metrics(encode(y), np.array(y_hat))
+    performance_metrics = compute_performance_metrics(y, y_hat)
     model_eval.update(performance_metrics)
+    model_eval.update(hyper_parameters)
 
-    print("Decision Tree Accuracy: %.02f Exec Time: %.02f" % (model_eval.get('Acc'), model_eval.get('training_runtime')))
     return model_eval, decision_tree
 
 
@@ -47,9 +48,9 @@ def evaluate_rule_mining(data_set, categories, unknown_fact, search_depth=100, m
         theory = Theory.learn_with_pruned_search(case_model, depth=search_depth,
                                                  max_premise_size=max_premise_size, log=False)
         t2 = time.time()
-        model_eval = {'training_runtime': (t2 - t1), 'model_type': 'rule mining'}
+        model_eval = {'training_runtime': (t2 - t1), 'model_type': 'rule mining', 'data_type': 'train'}
     else:
-        model_eval = {'training_runtime': 0, 'model_type': 'rule mining'}
+        model_eval = {'training_runtime': 0, 'model_type': 'rule mining', 'data_type': 'test'}
 
     y_hat, y_ = [], []
     for i in data_set.index:

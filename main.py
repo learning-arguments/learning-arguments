@@ -3,6 +3,7 @@ import datetime as dt
 import os
 from load_data import load_csv_data, bin_data_set, bin_labels
 import dataPreProcessing.discretizations.discretizations
+from dataPreProcessing.dataPreProcessor import dataPreProcessor
 from sklearn.model_selection import train_test_split
 from evaluation import evaluate_decision_trees, evaluate_rule_mining, evaluate_hero_algorithm
 from itertools import product
@@ -15,8 +16,8 @@ warnings.filterwarnings("ignore")
 if __name__ == "__main__":
 
     evaluation_results = pd.DataFrame()
-    for param in list(product(["BostonHousing.csv", 'IRIS.csv'], ['EDBinning', 'DBSCAN', 'kMeans', 'EWBinning'])):
-        hyper_parameters = {'dataset': param[0], 'binning_method': param[1]}
+    for param in list(product(["BostonHousing.csv"], ['EWBinning', 'EDBinning', 'kMeans', 'DBSCAN'], [None, 2, 3, 4])):
+        hyper_parameters = {'dataset': param[0], 'binning_method': param[1], 'no_bins': param[2]}
         try:
             print('start: %s' % hyper_parameters)
             myDataPath = os.path.join('data', hyper_parameters.get('dataset'))
@@ -27,11 +28,13 @@ if __name__ == "__main__":
 
             preProcessor = dataPreProcessor.dataPreProcessor()
             discretized_train = preProcessor.discretizeTrain(train, algorithm=hyper_parameters.get('binning_method'),
-                                                             oneHotEncoding=True)
-            discretized_test = preProcessor.discretizeTest(test, oneHotEncoding=True)
+                                                             oneHotEncoding=False, no_bins=hyper_parameters.get('no_bins'))
+            discretized_test = preProcessor.discretizeTest(test, oneHotEncoding=False)
 
             columns = list(discretized_train.columns[10:14])
-            target_col = list(filter(lambda x: x.split('_')[0] == 'medv', discretized_train.columns))
+            discretized_train = discretized_train[columns]
+            discretized_test = discretized_test[columns]
+            target_col = discretized_train.columns[-1]
 
             # Train Set Decision Trees
             model_eval_dt_train, decision_tree = evaluate_decision_trees(discretized_train, target_col, columns,
@@ -44,45 +47,42 @@ if __name__ == "__main__":
             print(model_eval_dt_train, '\n', model_eval_dt_test)
         except Exception as e:
             print("Exception %s %s" % (hyper_parameters, e))
-            continue
+            # continue
 
-    for param in list(
-            product(["BostonHousing.csv"], [2, 3, 4, 5], ['equal_depth', 'equal_width'], [5, 10, 20], [2, 4, 6])):
-        hyper_parameters = {'dataset': param[0], 'no_bins': param[1], 'binning_method': param[2],
-                            'search_depth': param[3], 'max_premises': param[4]}
-        try:
+        for param2 in list(product([1, 5, 20, 50], [2, 4, 6])):
+            hyper_parameters = {'search_depth': param2[0], 'max_premises': param2[1]}
+            # try:
             print('start: %s' % hyper_parameters)
 
-            boston_housing_data_raw = load_csv_data(hyper_parameters.get('dataset'))
-            binned_data = bin_data_set(boston_housing_data_raw, n_bins=hyper_parameters.get('no_bins'),
-                                       method=hyper_parameters.get('binning_method'))
-
-            columns = list(binned_data.columns[10:14])
-            categories = dict([(column, bin_labels(hyper_parameters.get('no_bins'))) for column in columns])
-            df = binned_data[columns]
-            train, test = train_test_split(df, test_size=0.2, random_state=1)
-            target_col = 'medv'
+            train_categories = dict([(column, list(set(discretized_train[column]))) for column in discretized_train.columns])
+            discretized_train_ = discretized_train.copy()
+            for column in discretized_train_.columns:
+                discretized_train_[column] = discretized_train_[column].apply(lambda x: str(x) + '_' + str(column))
+            test_categories = dict([(column, list(set(discretized_train[column]))) for column in discretized_test.columns])
+            discretized_test_ = discretized_test.copy()
+            for column in discretized_test_.columns:
+                discretized_test_[column] = discretized_test_[column].apply(lambda x: str(x) + '_' + str(column))
 
             # Train Set Rule Mining
-            model_eval_rm_train, theory = evaluate_rule_mining(train, categories, target_col,
-                                                               search_depth=hyper_parameters.get('search_depth'),
-                                                               max_premise_size=hyper_parameters.get('max_premises'))
+            model_eval_rm_train, theory = evaluate_rule_mining(discretized_train_, train_categories, target_col, columns,
+                                                            search_depth=hyper_parameters.get('search_depth'),
+                                                            max_premise_size=hyper_parameters.get('max_premises'))
             model_eval_rm_train.update(hyper_parameters)
 
             # Test Set Rule Mining
-            model_eval_rm_test, _ = evaluate_rule_mining(test, categories, target_col,
-                                                         search_depth=hyper_parameters.get('search_depth'),
-                                                         max_premise_size=hyper_parameters.get('max_premises'),
-                                                         theory=theory)
+            model_eval_rm_test, _ = evaluate_rule_mining(discretized_test_, test_categories, target_col, columns,
+                                                        search_depth=hyper_parameters.get('search_depth'),
+                                                        max_premise_size=hyper_parameters.get('max_premises'),
+                                                        theory=theory)
             model_eval_rm_test.update(hyper_parameters)
             model_eval_rm_test['training_runtime'] = model_eval_rm_train.get('training_runtime')
 
             evaluation_results = evaluation_results.append(model_eval_rm_train, ignore_index=True)
             evaluation_results = evaluation_results.append(model_eval_rm_test, ignore_index=True)
             print(model_eval_rm_train, '\n', model_eval_rm_test)
-        except Exception as e:
-            print("Exception %s %s" % (hyper_parameters, e))
-            continue
+            # except Exception as e:
+            #     print("Exception %s %s" % (hyper_parameters, e))
+            #     continue
 
     undiscretized_data = True
 

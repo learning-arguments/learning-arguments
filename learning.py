@@ -57,11 +57,8 @@ class Theory:
                 for a in self.conclusive_arguments + self.presumptively_valid_arguments
                 if a != argument
             ]
-            if self.is_applicable(
-                known_facts, unknown_fact, argument
-            ) and not self.is_defeated(
-                known_facts, unknown_fact, argument, other_arguments
-            ):
+            if self.is_applicable(known_facts, unknown_fact, argument) and not self.is_defeated(
+                known_facts, unknown_fact, argument, other_arguments):
                 presumptively_valid_args.append(argument)
             if presumptively_valid_args:
                 selected_arg = max(

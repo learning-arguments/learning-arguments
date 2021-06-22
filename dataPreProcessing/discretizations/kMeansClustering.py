@@ -4,24 +4,26 @@ import numpy as np
 import warnings
 
 # discretizes a column of the dataframe
-def transformCol(myData):
+def transformCol(myData, no_bins):
     bestScore = -float('inf')
     bestK = 0.0
+    if no_bins is None:
+        # find the best number of clusters
+        for k in range(2, 11):
+            kMeans = KMeans(n_clusters=k, random_state=42)
+            y = kMeans.fit_predict(myData)
 
-    # find the best number of clusters
-    for k in range(2, 11):
-        kMeans = KMeans(n_clusters=k, random_state=42)
-        y = kMeans.fit_predict(myData)
+            # silhouette score only works when more than one cluster is found by the algorithm
+            # even if numbers of clusters k > 1,
+            # the algorithm can return one cluster if centroids converge closely
+            if len(np.unique(y)) != 1:
+                score = silhouette_score(myData, kMeans.labels_)
 
-        # silhouette score only works when more than one cluster is found by the algorithm
-        # even if numbers of clusters k > 1,
-        # the algorithm can return one cluster if centroids converge closely
-        if len(np.unique(y)) != 1:
-            score = silhouette_score(myData, kMeans.labels_)
-
-            if score > bestScore:
-                bestScore = score
-                bestK = k
+                if score > bestScore:
+                    bestScore = score
+                    bestK = k
+    else:
+        bestK = no_bins
 
     # parameter tuning is finished, make clusters using the best parameters
     kMeans = KMeans(n_clusters=bestK, random_state=42)
@@ -52,8 +54,8 @@ def transformCol(myData):
 
 
 class kMeansClustering:
-    def __init__(self):
-        pass
+    def __init__(self, no_bins):
+        self._no_bins = no_bins
 
     def fit(self, X, y=None):
         return self
@@ -74,5 +76,5 @@ class kMeansClustering:
             # replace the value of the column
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                result[thisCol] = transformCol(myData)
+                result[thisCol] = transformCol(myData, self._no_bins)
         return result

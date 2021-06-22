@@ -12,12 +12,12 @@ class dataPreProcessor:
 
     # this method is used to discretize the training set before learning
     # the variable "algorithm" decides which algorithm is used for discretization
-    def discretizeTrain(self, train, algorithm, oneHotEncoding=False):
+    def discretizeTrain(self, train, algorithm, oneHotEncoding=False, no_bins=None):
         # save the numeric columns that will be discretized
         self._myCols = train._get_numeric_data().columns
 
         # discretize the dataframe and save it
-        self._discretizedTrain = discretizations.discretize(train, algorithm)
+        self._discretizedTrain = discretizations.discretize(train, algorithm, no_bins=no_bins)
 
         # use ohe if specified so
         if oneHotEncoding:

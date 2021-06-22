@@ -18,36 +18,38 @@ if __name__ == "__main__":
     evaluation_results = pd.DataFrame()
     for param in list(product(["BostonHousing.csv"], ['EWBinning', 'EDBinning', 'kMeans', 'DBSCAN'], [None, 2, 3, 4])):
         hyper_parameters = {'dataset': param[0], 'binning_method': param[1], 'no_bins': param[2]}
-        try:
-            print('start: %s' % hyper_parameters)
-            myDataPath = os.path.join('data', hyper_parameters.get('dataset'))
-            df = pd.read_csv(myDataPath)
-            df.dropna(inplace=True)
-            train_test_split(df, test_size=0.2, random_state=1)
-            train, test = train_test_split(df, test_size=0.2, random_state=1)
 
-            preProcessor = dataPreProcessor.dataPreProcessor()
-            discretized_train = preProcessor.discretizeTrain(train, algorithm=hyper_parameters.get('binning_method'),
-                                                             oneHotEncoding=False, no_bins=hyper_parameters.get('no_bins'))
-            discretized_test = preProcessor.discretizeTest(test, oneHotEncoding=False)
+        print('start: %s' % hyper_parameters)
+        myDataPath = os.path.join('data', hyper_parameters.get('dataset'))
+        df = pd.read_csv(myDataPath)
+        df.dropna(inplace=True)
+        train_test_split(df, test_size=0.2, random_state=1)
+        train, test = train_test_split(df, test_size=0.2, random_state=1)
 
-            columns = list(discretized_train.columns[10:14])
-            discretized_train = discretized_train[columns]
-            discretized_test = discretized_test[columns]
-            target_col = discretized_train.columns[-1]
+        preProcessor = dataPreProcessor.dataPreProcessor()
+        discretized_train = preProcessor.discretizeTrain(train, algorithm=hyper_parameters.get('binning_method'),
+                                                         oneHotEncoding=True, no_bins=hyper_parameters.get('no_bins'))
+        discretized_test = preProcessor.discretizeTest(test, oneHotEncoding=True)
 
-            # Train Set Decision Trees
-            model_eval_dt_train, decision_tree = evaluate_decision_trees(discretized_train, target_col, columns,
-                                                                         hyper_parameters)
-            model_eval_dt_test, _ = evaluate_decision_trees(discretized_train, target_col, columns, hyper_parameters,
-                                                            decision_tree)
-            model_eval_dt_test['training_runtime'] = model_eval_dt_train.get('training_runtime')
-            evaluation_results = evaluation_results.append(model_eval_dt_train, ignore_index=True)
-            evaluation_results = evaluation_results.append(model_eval_dt_test, ignore_index=True)
-            print(model_eval_dt_train, '\n', model_eval_dt_test)
-        except Exception as e:
-            print("Exception %s %s" % (hyper_parameters, e))
-            # continue
+        columns = list(discretized_train.columns[10:14])
+        discretized_train = discretized_train[columns]
+        discretized_test = discretized_test[columns]
+        target_col = discretized_train.columns[-1]
+
+        # Train Set Decision Trees
+        model_eval_dt_train, decision_tree = evaluate_decision_trees(discretized_train, target_col, columns,
+                                                                     hyper_parameters)
+        model_eval_dt_test, _ = evaluate_decision_trees(discretized_train, target_col, columns, hyper_parameters,
+                                                        decision_tree)
+        model_eval_dt_test['training_runtime'] = model_eval_dt_train.get('training_runtime')
+        evaluation_results = evaluation_results.append(model_eval_dt_train, ignore_index=True)
+        evaluation_results = evaluation_results.append(model_eval_dt_test, ignore_index=True)
+        print(model_eval_dt_train, '\n', model_eval_dt_test)
+
+        discretized_train = preProcessor.discretizeTrain(train, algorithm=hyper_parameters.get('binning_method'),
+                                                         oneHotEncoding=False,
+                                                         no_bins=hyper_parameters.get('no_bins'))
+        discretized_test = preProcessor.discretizeTest(test, oneHotEncoding=False)
 
         for param2 in list(product([1, 5, 20, 50], [2, 4, 6])):
             hyper_parameters = {'search_depth': param2[0], 'max_premises': param2[1]}

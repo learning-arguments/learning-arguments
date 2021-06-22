@@ -46,7 +46,7 @@ def evaluate_rule_mining(data_set, categories, unknown_fact, columns, search_dep
         t1 = time.time()
         case_model = generate_case_model(data_set, categories)
         theory = Theory.learn_with_pruned_search(case_model, depth=search_depth,
-                                                 max_premise_size=max_premise_size, log=True)
+                                                 max_premise_size=max_premise_size, log=False)
         t2 = time.time()
         model_eval = {'training_runtime': (t2 - t1), 'model_type': 'rule mining', 'data_type': 'train'}
     else:

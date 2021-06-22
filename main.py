@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 if __name__ == "__main__":
 
     evaluation_results = pd.DataFrame()
-    for param in list(product(["BostonHousing.csv", 'weatherAUS.csv'], ['EDBinning', 'DBSCAN', 'kMeans', 'EWBinning'])):
+    for param in list(product(["BostonHousing.csv", 'IRIS.csv'], ['EDBinning', 'DBSCAN', 'kMeans', 'EWBinning'])):
         hyper_parameters = {'dataset': param[0], 'binning_method': param[1]}
         try:
             print('start: %s' % hyper_parameters)
@@ -52,7 +52,6 @@ if __name__ == "__main__":
                             'search_depth': param[3], 'max_premises': param[4]}
         try:
             print('start: %s' % hyper_parameters)
-            categories = dict([(column, bin_labels(len(set(discretized_train[column])))) for column in columns])
 
             boston_housing_data_raw = load_csv_data(hyper_parameters.get('dataset'))
             binned_data = bin_data_set(boston_housing_data_raw, n_bins=hyper_parameters.get('no_bins'),

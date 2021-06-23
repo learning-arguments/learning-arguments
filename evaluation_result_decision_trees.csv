@@ -1,0 +1,21 @@
+Acc,F1,binning_method,data_type,dataset,model_type,no_bins,training_runtime
+0.861386139,0.863405437,kMeans,train,BostonHousing.csv,decision tree,,41.42478108
+0.861386139,0.863405437,kMeans,test,BostonHousing.csv,decision tree,,41.42478108
+1,1,kMeans,train,BostonHousing.csv,decision tree,2,39.06193352
+1,1,kMeans,test,BostonHousing.csv,decision tree,2,39.06193352
+0.997524752,0.996288662,DBSCAN,train,BostonHousing.csv,decision tree,,21.21809793
+0.997524752,0.996288662,DBSCAN,test,BostonHousing.csv,decision tree,,21.21809793
+1,1,EDBinning,train,BostonHousing.csv,decision tree,,37.76152396
+1,1,EDBinning,test,BostonHousing.csv,decision tree,,37.76152396
+1,1,EDBinning,train,BostonHousing.csv,decision tree,2,38.73252845
+1,1,EDBinning,test,BostonHousing.csv,decision tree,2,38.73252845
+1,1,EDBinning,train,BostonHousing.csv,decision tree,4,39.14042592
+1,1,EDBinning,test,BostonHousing.csv,decision tree,4,39.14042592
+1,1,EWBinning,train,BostonHousing.csv,decision tree,,36.45852494
+1,1,EWBinning,test,BostonHousing.csv,decision tree,,36.45852494
+1,1,EWBinning,train,BostonHousing.csv,decision tree,2,32.72438741
+1,1,EWBinning,test,BostonHousing.csv,decision tree,2,32.72438741
+1,1,EWBinning,train,BostonHousing.csv,decision tree,4,34.8753078
+1,1,EWBinning,test,BostonHousing.csv,decision tree,4,34.8753078
+0.920792079,0.917702011,EWBinning,train_undiscretized_data,BostonHousing.csv,decision tree,4,36.89841771
+0.920792079,0.917702011,EWBinning,test_undiscretized_data,BostonHousing.csv,decision tree,4,36.89841771

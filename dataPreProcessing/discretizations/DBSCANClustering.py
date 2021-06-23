@@ -62,8 +62,8 @@ def transformCol(myData):
         # these are the values of the current cluster we are looking at
         myCluster = myData[myClusterIndices]
         # get the min and max values of these
-        myMin = myCluster.min()
-        myMax = myCluster.max()
+        myMin = float(myCluster.min())
+        myMax = float(myCluster.max())
         # here, clusters are described as a range of the maximum and minimum value of the cluster.
         # This makes prediction easier compared to simply using the centroids of the algorithm
         clusters[i] = str(myMin) + '-' + str(myMax)

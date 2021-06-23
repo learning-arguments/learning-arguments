@@ -52,3 +52,14 @@ def getClosestRange(myValue, ranges):
     # convert this to a string in the same format as the original
     myRange = str(ranges[index_closest][0]) + '-' + str(ranges[index_closest][1])
     return myRange
+
+# adds empty columns to match the discretized dataframe
+def addMyCols(df, myCols):
+    result = df.copy()
+    dfCols = result.columns
+
+    for column in myCols:
+        if column not in dfCols:
+            result[column] = 0
+
+    return result

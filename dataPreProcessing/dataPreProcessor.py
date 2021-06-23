@@ -1,5 +1,5 @@
 from dataPreProcessing.discretizations import discretizations
-from dataPreProcessing.dataEncoder import fitToDomain
+from dataPreProcessing.dataEncoder import fitToDomain, addMyCols
 from dataPreProcessing.oneHotEncoder import encode
 # This is the wrapper class for all of the files in this folder.
 # It allows for data discretization of the training dataframe, and also uses oneHotEncoding if specified so.
@@ -21,7 +21,9 @@ class dataPreProcessor:
 
         # use ohe if specified so
         if oneHotEncoding:
-            return encode(self._discretizedTrain)
+            df = encode(self._discretizedTrain)
+            self._oheColumns = df.columns
+            return df
         return self._discretizedTrain
 
     def discretizeTest(self, test, oneHotEncoding=False):
@@ -29,5 +31,7 @@ class dataPreProcessor:
 
         # use ohe if specified so
         if oneHotEncoding:
-            return encode(result)
+            df = encode(result)
+            df = addMyCols(df, self._oheColumns)
+            return df
         return result

@@ -1,0 +1,54 @@
+\chapter{Conclusion}
+
+\begin{enumerate}
+    \item We can implement and replicate all examples from \cite{verheijProofProbabilities2017} and \cite{verheijAnalyzingSimonshavenCase2020}. 
+    \item We have investigated four different algorithms for learning arguments. Our search-based algorithms (naive and pruned) postprocess the learned arguments by filtering out arguments that are unnecessarily specific. The HeRO algorithm does not learn irrelevant arguments in the first space by employing the criterion of information gain. % The decision tree algorithm uses pruning on the learned tree to discard less relevant nodes. 
+    The decision tree algorithm creates rules by evaluating purity of subsets.
+    \item Transfering the approach to an attribute-value dataset (the Boston Housing dataset) has been fully accomplished. Data discretization techniques or data preprocessing have been explored, namely equal-width binning, equal-depth binning, k-mean clustering and DBSCAN clustering.
+    \item We have successfully transfered to implementation of the approach by \cite{verheijProofProbabilities2017} the idea of postprocessing arguments by filtering from the DefGen algorithm, as well as the principle of pruning the search space from logical learning and the Apriori algorithm. We have sketched how future work can adapt decision trees for the learning of arguments (see below).
+    \item The applicability of the approach has been shown in principle. There are serious limitations: The runtime is very long and we had to restrict the number of columns to accomodate this. Moreover, the evaluation metrics have turned out to be less meaningful than expected, since, for example, bad binning can have a positive impact on accuracy and F1 score. Also, data discretization techniques or data preprocessing have been explored, namely equal-width binning, equal-depth binning, k-mean clustering and DBSCAN clustering.
+    
+    Through experimentation, we were able to show that learning arguments is highly dependent on the discretization technique used, where simpler discretizations lead to higher accuracy but lower explainability due to the oversimplification of the data. Inversely, more complex discretizations lead to lower accuracy, but higher explainability.
+    
+    We have comparatively evaluated the explainability of the algorithms on two toy examples, and provide many more such examples for reference in \autoref{appendix-notebook}. The number of arguments that the pruned search algorithm learns is generally too high for good explainability; the HeRO algorithm performs better with respect to the number of learned arguments.
+\end{enumerate}
+
+
+
+
+% (Summarize the findings of this project, reflect on the introduction, research questions and findings in our experimental results)
+\label{fw}
+\section{Future Work}
+
+During the pursuit of this project, numerous possible improvements to the given setup were noted.
+
+\subsection*{Arguments with Exceptions for Decision Tree Rule-Mining}
+
+In this project, conclusive rules have been extracted from decision trees by following each path from the root to the leaf nodes. However, it is possible to derive arguments with exceptions from decision trees:
+
+\begin{enumerate}
+    \item Firstly, the premises represented by the internal nodes must be extracted. For the root of the tree, the premise will be $\emptyset$. For other internal nodes, these premises will be represented by the path from the root node.
+    \item For each of the internal nodes, a rule is created. The premises of this rule are given given by the path to the root and the conclusion is given by the majority class at the internal node.
+    \item The conclusive rules given by the tree are compared to the rules given by the internal nodes. In case the premises of a rule from the internal nodes are a subset of the premises of a rule from the external nodes, and the conclusion is the same, the rule from the external node can be pruned. If this is not the case, the rule from the external node is an exception to an argument and therefore kept.
+\end{enumerate}
+
+In terms of accuracy, this approach will perform equally to deriving rules from the external nodes of a tree when given a complete dataset. However, this approach allows to form arguments with exceptions, and thereby enables prediction on incomplete data.
+
+\subsection*{Optimizing Discretization}
+
+In this project, every numerical feature of a dataset is discretized before rule-mining. This may not be desirable, as some datasets encode categorical features as numbers. Alternative means to extract continuous features could therefore be considered, e.g. manual selection, or comparing the number of total feature values against the number of unique feature values.
+
+Another improvement could be to handle the discretization and rule-mining as a merged classifier, which has parameters from both algorithms. Using hyperparameter tuning, this classifier could be tuned such that each feature in the data is discretized in an optimal way for the rule-mining during training. However, it should be noted here that the discretization algorithms used in this project still discretize the features without consideration of the target feature, and therefore, the performance increase might not be substantial. 
+
+\subsection*{Optimization of Explainability}
+
+While explainability can be measured using the maximum or average number of premises of an argument as well as the number of arguments, there are no concrete metrics to evaluate these numbers. Additionally, there must be a balance of of accuracy and explainability, where it is not known how much one is preferred over another.
+
+To solve these issues, surveys can be conducted, asking a set of people for perceived explainability of statements, as well how preferable simple statements are based on the given accuracies.
+
+\subsection*{Taking transitivity into account}
+
+One substantial benefit of arguments over, for example, association rules, is that they can be reasoned with by chaining small arguments together to larger arguments. This is not trivial, since at every chaining step, defeating circumstances need to be considered  \citep{verheijProofProbabilities2017}, p. 139-141. One recently developed method for such reasoning is the argumentation tableau \citep{roosSemanticTableauMethod2020}.
+
+The four algorithms in this project do not leverage these reasoning capabilities. They learn the arguments for a given target column, or, if no target column is specified, they iterate over all columns and learn arguments for all of them. One way to improve the algorithms would be to add another postprocessing steps, where unnecessarily complex arguments -- whose conclusions can as well be derived from chaining simpler rules -- are eliminated or replaced by simpler arguments. 
+% For example ... 

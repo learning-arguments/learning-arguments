@@ -1,0 +1,35 @@
+\chapter{Introduction}\label{Introduction}
+
+\section{Explainable AI}
+
+Artificial intelligence, in a societal context, is confronted with a variety of requirements that are recently being investigated by the research fields around explainable, responsible and socially aware artificial intelligence \citep{specialinterestgrouponartificialintelligenceDutchArtificialIntelligence2018}. Here we are concerned with explainability, that is, making the criteria transparent that underlie the decision of an algorithm.
+
+Explainability is also increasingly becoming a \textit{legal} requirement of algorithms. In many countries, which as of recently includes the Netherlands (\citet{raadvanstateECLINLRVS2017} and \citet{rechtbankdenhaagECLINLRBDHA2020}), administrative and judicative decisions that have been supported by an algorithm are required to be comprehensible for judges and citizens \citep{doshi-velezAccountabilityAILaw2019}. The General Data Protection Regulation of the EU (see \citet{goodmanEuropeanUnionRegulations2017}), as well as similar legislation in the United States gives citizens a right to explainabilty also towards companies; albeit only when important decisions such as credit status are involved.
+
+Surveys have been undertaken as to which machine learning techniques are suitable for explainable artificial intelligence, according to a range of sub-criteria. The result is that decision trees and approaches based on deductive logic are the most suitable techniques (\cite{arrietaExplainableArtificialIntelligence2020}; \cite{waltlExplainableArtificialIntelligence2018}). Here we investigate an approach based on argumentation, which can be classified broadly as a deductive logic approach.
+
+\section{Reasoning with arguments}
+
+Giving arguments, considering exceptions to these arguments, and putting multiple small arguments together to build big, convincing arguments, is the human way of justifying things. Automatically learning arguments is relevant for transparent decision making in domains such as law, public administration, or insurance, as well as to the discovery of scientific explanations. 
+
+Argumentation, which will be introduced in \autoref{sec:arguments}, addresses three problems:
+
+The first problem is the mentioned requirement of the explainability of the decision of the algorithm. An algorithm that substantiates its claims with arguments can, if the arguments are properly presented, be understood by a human. Thus, humans can detect potential errors in the algorithm’s decision, or, hopefully, verify that no such errors have been made. This increases trust between human and machine (see \citet{doshi-velezAccountabilityAILaw2019}).
+
+The second problem is that learning from a finite set of data can never lead to generalizations that are completely certain (see \citet{kakasAbductionArgumentationExplainable2020}). This has been studied for centuries as the problem of induction, that is, the problem of deriving laws and law-like generalizations from observations. In the context of machine learning, we can differentiate between the knowledge incorporated in the set of training data and the background knowledge of human experts. Today, there is usually some relevant knowledge that only experts (or even non-expert humans) possess, which is not incorporated in the training data set. Such knowledge could be about the causal relationships between some of the attributes of the data, for example. Machine learning systems that produce arguments can leverage the knowledge of both the data set and the human: The system can generate a handful of arguments of arguments for (and potentially also against) a decision, and the human can then decide which of these make sense, and which are most credible.
+
+The third problem is that humans may pose certain requirements towards the justification of a decision that are in conflict with the training data. An important example is racial, sexual, and other bias, that may be present in the training data, and would lead to the perpetuation of discrimination (and hence, further biased data sets) in the future. In order to avoid vicious circles of discrimination, humans may wish to reject discriminatory decisions, even if they are justified given the training data. This may also be realized with argumentation, where, for example, racially motivated arguments can be discarded and the most plausible of the remaining arguments can be used.
+
+\section{Research questions}
+
+\begin{enumerate}
+    \item Can we reproduce the examples from \cite{verheijProofProbabilities2017} and \cite{verheijAnalyzingSimonshavenCase2020}?
+    \item Can we find an (efficient) algorithm for learning arguments with this approach? How do we decide which arguments are relevant and which ones can be discarded?
+    \item Can we transfer the approach to a general attribute-value classification machine learning setting?
+    \item What existing techniques are there for learning arguments, and how do they relate to each other? What insights can we transfer to the implementation of the approach by \cite{verheijProofProbabilities2017}?
+    \item Can we show the (in)applicability of the approach on a real dataset? How does the approach compare with similar rule-based approaches in terms of (a) accuracy and (b) runtime on %(1) 
+    real world data sets 
+    % and (2) tailored synthetic data sets
+    ?
+    What can we infer about explainability by looking at the theories generated by the algorithms?
+\end{enumerate}

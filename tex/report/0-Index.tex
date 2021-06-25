@@ -1,0 +1,46 @@
+\documentclass{report}
+
+\include{header}
+
+% citations are like: \citep[p.~113]{broome_2012}, \citet[p.~113]{broome_2012}
+
+\begin{document}
+\input{title}
+
+\begin{abstract}
+We investigate \textit{learning arguments}, a family of symbolic machine learning techniques that is particularly human-interpretable. These techniques learn a set of arguments as an intermediate representation. Arguments are small rules with exceptions that can be chained to larger arguments for making predictions. We implement three approaches based on systematic search (naive search, pruned search, and the HeRO algorithm) as well as decision trees and evaluate them on small handmade data as well as medium-sized real world data. We pay special attention to the automatic selection and optimization of a suitable discretization technique, making the approach fruitful for both categorical and continuous data. The results indicate high accuracy for small datasets, yet exponentially increasing computational cost as the dataset increases in size. Learning arguments is highly relevant to the field of explainable artificial intelligence. Our work contributes to widening the spectrum of applications from reasoning tasks in the legal domain to general categorization and prediction tasks.
+\end{abstract}
+
+\vfill
+{\small\tableofcontents}
+\vfill
+\newpage
+
+\include{1-Introduction}
+\include{2-Theory}
+\include{3-Related-Work}
+\include{4-Methodology}
+\include{5-Experimental-Results}
+\include{6-Conclusion}
+
+\begin{appendices}
+\label{appendix-related-work}
+\chapter{Extended related work}
+Extended related work is provided in a separate file, \textit{Appendix A.pdf}. It extends upon the related work section in this document, covering other machine learning methods that are relevant to learning arguments but have not been implemented in this project. It also includes a number of figures to vividly illustrate the differences between the various approaches.
+
+\label{appendix-notebook}
+\chapter{Analysis of case models}
+We have implemented the examples from \cite{verheijProofProbabilities2017} in a literate notebook. The notebook also includes the different theories that our naive search algorithm, pruned search algorithm, and the HeRO algorithm learn on these case models. The notebook is provided as a separate file, \textit{Appendix B.ipynb}, and, non-interactively \textit{Appendix B.pdf}.
+
+\label{appendix-code}
+\chapter{Code}
+Our code is available as an open source Python module at \url{https://github.com/learning-arguments/learning_arguments}, as well as in an accompanying ZIP file. The code allows for reproducing the evaluation section of this report. A guide for reproducing is provided in the \textit{README} file within the code folder.
+
+We also include Excel tables with the results of our evaluation.
+
+\end{appendices}
+
+\bibliographystyle{apacite}
+\bibliography{bibliography}
+
+\end{document}

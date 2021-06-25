@@ -1,0 +1,130 @@
+\chapter{Experimental results}
+
+In order to test the performance of the algorithm, several experiments have been performed.
+
+\section{Set-up}
+In order to evaluate the framework described above, a wide variety of experiments is conducted in order to gain some insight which rule mining technique, as well as discretization method, lead to a high predictive power. In some cases the algorithms require additional hyperparameters which are included in the analysis as well. 
+
+The four main steps of the experiments are data preprocessing, model training, predictions, as well as model evaluation. In a first step, the data is discretized by a method described in section \ref{Section_Discretization_Techniques}. For one experiment using decision trees, only the target column is discretized. In a second step, the selected algorithm (see section \ref{Section_Learning_Arguments}) for learning the arguments from the data is applied. Afterwards, the learned model is used to generate predictions from the in-sample as well as out-of-sample data. Finally, the predictions are evaluated by computing accuracy and weighted F1-score. Despite being hardware dependent, the training time is measured in order to get an understanding of the relative computational cost of the algorithms. 
+
+\paragraph*{Discretizing the data}
+The data is discretized using equal-width binning, equal-depth binning, DBSCAN and k-means. The parameter to be defined in this step is mainly the number of bins that the data will be discretized into. An optimization algorithm for finding the ideal number of bins has been implemented. However, due to the fact that the search algorithms are very sensitive to the number of bins, the discretization algorithms also run with some predefined number of bins, namely two, three and four bins. 
+
+\paragraph*{Learning Arguments}
+While the decision tree algorithm optimizes the parameters by Bayesian Optimization (section \ref{Section_Bayesian_Optimization}), there is still a need for specifying the parameter search space. Here, the maximum features randomly chosen at a split can be between 1 and the number of features of the training data. The maximum depth is capped at 50 to retain explainability and the minimum number of samples required at a leaf node is constrained between 1 and 1000. The minimum number of samples required to split an internal node is between 2 and 1000. 
+ 
+For the pruned search algorithm, there are mainly two hyperparameters that need to be tuned. Next to the search depth, which is tested with the values {1, 5, 20, 50}, the values {2, 4, 6} are tested for the maximum premise size constraint. A priori, we assume that the former will have a significant impact on the run-time while the latter will mainly determine the the quality of the predictions. 
+
+Lastly, the hero algorithm does not require any hyperparameter tuning. 
+ 
+\section{Results}
+
+\paragraph*{Decision Trees} When using the Boston Housing Data set, the decision trees were scoring a perfect accuracy of 1 when using equal-depth binning or equal-width binning. Using DBSCAN gave a slightly lower accuracy of 0.99 and using k-means yielded 0.86. Those figures showcase very well the impact and importance of choosing a good technique when discretizing the data. Note that the accuracy alone does not provide a complete picture of the quality of the algorithm: For example, using one bin for all the data would result in a accuracy of 1, yet the algorithm would not explain any structure in the data. With regard to the training time, the decision trees run significantly longer than the pruned search algorithms. When only discretizing the target column using equal-width binning and leaving the input values continuous, the decision trees achieve an accuracy of 0.92. This indicates that the decision trees are able to capture the structure well. 
+
+\paragraph*{Pruned search} When it comes to pruned search, the results also exhibit high results for the accuracy and F1 scores. The average accuracy (F1 score) on the training set is 0.88 (0.83) and 0.85 (0.83) on the test set. In total, 198 experiments with the pruned search algorithm have been run and the standard deviation of the evaluation metrics (accuracy: 0.0868, F1: 0.0864) indicate that the algorithms performance is rather robust. When studying the correlation, one notices that the pruned search algorithms do not significantly vary in precision when adjusting search depth and maximum premises. Table \ref{tab:pruned search} shows the correlation of the hyperparameters as well as the precision. In this case, runs on the test set and training set are considered together. Contrary to the initial hypothesis, a constraint on premises does not have an effect on the performance, yet a positive correlation to the run-time suggests that it increases the computational complexity significantly. The number of bins are positively correlated with the run-time, yet exhibit a negative correlation on the accuracy metrics. Since fewer bins make the problem easier for the algorithm, this does not come as a surprise. A very interesting observation is the negative correlation of the the run-time and precision. This indicates that simpler and faster algorithms perform better on this data set, likely because they are less predisposed to overfitting. 
+
+As mentioned, the discretization algorithm has a siginificant impact on the success of the algorithm. When looking at the situation where pruned search is used to mine the arguments and the number of bins is fixed to 2, one can observe that the accurancy on the test set increases when using the discretization algorithms in the following order: k-means (average accuracy 0.80), equal depth binning (0.83), equal width binning (0.91), DBSCAN (0.97). The ordering is strict, meaning that using a different discretization algorithm will always yield a higher or lower accurancy in the given settings. This emphasizes the  significant impact of binning on the algorithm's performance. 
+
+\paragraph*{HeRO} The HeRO algorithm behaves similar compared to the pruned search algorithm in terms of performance. Similar as outlined above, the discretization algorithm is the main driver for the algorithm's performance. While the equal-depth binning yields an average accuracy (F1) of only 0.53 over all experiments, using k-means improves the results already significantly with an average accuracy of 0.79 (0.70). Equal-width binning further improves the situation by yielding 0.91 (0.86) and with an average accurancy 0.95 (0.93), DBSCAN gives the best results for the HeRO algorithm.
+
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lllllll}
+\multicolumn{1}{c}{\textit{n=198}} & \textit{Acc} & \textit{F1} & \textit{No. bins} & \textit{Depth} & \textit{Runtime} & Max premises                                    \\ \hline
+Acc                                                                               & 1.000        &             &                   &                &                  &                                                 \\
+F1                                                                                & 0.940        & 1.000       &                   &                &                  &                                                 \\
+No. bins                                                                          & -0.008       & 0.057       & 1.000             &                &                  &                                                 \\
+Depth                                                                             & 0.000        & 0.000       & 0.000             & 1.000          &                  &                                                 \\
+Runtime                                                                           & -0.173       & -0.001      & 0.170             & 0.035          & 1.000            &                                                  \\
+Max premises                                                                      & 0.000        & 0.000       &                   &                & 0.207            & 1.000                                           \\ \hline
+\end{tabular}
+\caption{Pruned Search Hyperparameter Correlation Table}
+\label{tab:pruned search}
+\end{table}
+
+\section{Discussion}
+
+The experiments show that the approach is generally working, yet needs further efforts to become practically applicable. There are two main issues that the experimental results bring to light. The first one is the exponentially increasing computational complexity of both the search and discretization algorithms. In this case, the amount of columns of the dataset has been reduced, and the Boston Housing data set only has about 500 data points. However, discretizing and training the algorithm in this setting already takes quite some time on end user hardware. These limitations should likely be  addressed first.
+
+Another point worth mentioning is the binning itself. In cases where the data is binned in very few bins, it can happen that the data is heavily skewed due to outliers. When e.g. 95\% of the houses are categorized as 'high price', the algorithm will score a very high accuracy with a naive prediction of always predicting 'high price'. It is obvious that the ability of the algorithms to explain patterns in data will decrease if the number of bins is reduced, while accuracy tends to increase. For that reason, just considering the accuracy might lead to false conclusions. 
+
+Furthermore, the experiments showed that simpler algorithms with less shorter seem to do better than the more complex algorithms. The key takeaway from this may be that learning arguments tends to over-fit quickly. Especially when the learned arguments have a lot of premises, one would need to learn a lot arguments in order to find a prediction for unseen data. Particularly when the test data has a different distribution that the training data, it might become rather challenging for the algorithms to generalize well. 
+
+
+\section{Qualitative analysis}
+
+In the following, we inspect in some more depth the theories that the different algorithms learn on small toy examples. More such comparative examples can be found in \autoref{appendix-notebook}. We do not include the decision tree algorithm in this section because we have not implemented it to learn from case models, but only from formatted data sets; in principle it would be possible to also apply the decision tree algorithm to case models. The HeRO algorithm does not per se pay attention to the priority between the cases. We work around this in the following simple way: For each case model, we create a patched case model, where we copy each case so often that the case with the highest priority corresponds to the case with the highest count, etc. These patched case models are also included in \autoref{appendix-notebook}.
+
+\subsection*{Legal case model}
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}{.2\textwidth}
+  \centering
+    \begin{tabular}{ c|c } 
+        1 & inn, $\neg$gui \\ \hline
+        0 & $\neg$inn, gui, evi
+    \end{tabular}
+  \caption{Case model}
+\end{subfigure}%
+\begin{subfigure}{.8\textwidth}
+  \centering
+    \begin{tabular}{ c|c|c|c } 
+        \textit{Verheij 2017} & \textit{Naive search} & \textit{Pruned search} & \textit{HeRO} \\ \hline
+        inn $\leftsquigarrow$& inn $\land$ $\neg$gui $\leftsquigarrow$ & inn $\land$ $\neg$gui $\leftsquigarrow$ & inn $\land$ $\neg$gui $\land$evi $\leftsquigarrow$ \\
+        $\neg$gui $\leftarrow$ inn & & $\neg$gui $\leftarrow$ inn & \\
+        & & gui $\leftarrow$ $\neg$inn & \\
+        & & evi $\land$ gui $\leftarrow$ $\neg$inn & \\
+        & & evi $\land$ $\neg$inn $\leftarrow$ gui & \\
+        gui $\leftarrow$ evi & & gui $\land$ $\neg$inn $\leftarrow$ evi & gui $\land$ $\neg$inn $\leftsquigarrow$ evi
+    \end{tabular}
+  \caption{Learned arguments}
+\end{subfigure}
+\caption{Learning arguments in case model 1 from \cite{verheijProofProbabilities2017}: \textit{Presumption of innocence.}}
+\label{fig:case_model_1}
+\end{figure}
+
+\autoref{fig:case_model_1} shows (a) a simple legal case model that demonstrates the presumption of innocence. The preferred case is the first one, where the suspect is innocent. In the second, less preferred case, there is some evidence, suggesting that the suspect is not innocent. \cite{verheijAnalyzingSimonshavenCase2020} manually derives three arguments: In general (without any conditions), the suspect is innocent; innocent implies non-guilty; and if there is evidence, the suspect is guilty. 
+
+The first, most general argument is found by all three algorithms. The algorithms also find another argument that applies in the most likely case: The suspect is not guilty. The HeRO algorithm is more confident than the other ones in that it even says that there is usually evidence. It comes to this conclusion because if any information is given regarding whether or not there is evidence, then indeed it will be the information that there is evidence. While this seems intuitive at first, it is problematic: When there is evidence, then the suspect is not innocent (an argument that the HeRO algorithm also finds itself), and thus there is a contradiction to the other conclusion of the argument -- that the suspect is innocent. We observe thus that the arguments produced by the HeRO algorithm are not necessarily coherent: There is, in this example, no case in the case model where both the premises and conclusions of the argument hold. This is an undesirable property of the HeRO algorithm.
+
+Another observation is that the argument from innocent to non-guilty is found by both the pruned search and the HeRO algorithm but not by the naive search. The same is true of the argument that if there is evidence then the suspect is guilty. We can thus see that naive search generates fewer arguments than we would like to have.
+
+The pruned search algorithm is most comprehensive in that it gives three arguments to detail the relationship between evidence, non-innocence and guilt. The HeRO algorithm does not need to specify these explicitly. Thanks to its first argument where it draws the general conclusion that there is evidence (we have criticized this argument above), it can describe the cases without needing the three verbose arguments that the pruned search needs here. Both pruned search and HeRO algorithm achieve an accuracy of $1$ on the "training set" (that is, the shown case model). They always do this if there are no parameters that restrict the depth of exceptions or the size of premises. (For the examples in this section, we do not set such restricting parameters, since the case models and theories are very small anyway.)
+
+\subsection*{Artificial case model}
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}{.25\textwidth}
+  \centering
+    \begin{tabular}{ c|c c c c } 
+        2 & a & b & c & y \\ \hline
+        1 & a & b & $\neg$c & $\neg$y \\ \hline
+        0 & a & $\neg$b & $\neg$c & y \\
+    \end{tabular}
+  \caption{Case model}
+\end{subfigure}%
+\begin{subfigure}{.75\textwidth}
+  \centering
+    \begin{tabular}{ c|c|c|c } 
+        \textit{Manual} & \textit{Naive search} & \textit{Pruned search} & \textit{HeRO} \\ \hline
+        y $\leftsquigarrow$ & y $\leftsquigarrow$ & y $\leftsquigarrow$ & y $\leftsquigarrow$ \\
+        & & y $\leftarrow$ c & \\
+        $\neg$y $\leftsquigarrow$ $\neg$c & & $\neg$y $\leftsquigarrow$ $\neg$c & \\
+        & & $\neg$y $\leftarrow$ b $\land$ $\neg$ c & $\neg$y $\leftsquigarrow$ b $\land$ $\neg$ c \\
+        & & $\neg$y $\leftsquigarrow$ a $\land$ $\neg$c & \\ 
+        y $\leftarrow$ $\neg$b & & y $\leftarrow$ $\neg$b & \\
+    \end{tabular}
+  \caption{Learned arguments}
+\end{subfigure}
+\caption{Learning arguments in case model 1 from \cite{verheijProofProbabilities2017}: \textit{Presumption of innocence.}}
+\label{fig:case_model_art_1}
+\end{figure}
+
+In \autoref{fig:case_model_art_1}, we have created a small artificial dataset. Here, we are only concerned with the prediction of the variable $y$. The idea of the dataset is that it would be best represented by nested exceptions: The first case is most common; the second case is less common and takes a different value for $y$, and thus arguments about it are best represented as an exception to the first; lastly, the third is least common and takes a different value than the second case for $y$, and thus an argument about it would best be represented as another exception (see the \textit{manual} column of the figure). This strucure potentially allows the argument-mining algorithms to shine.
+
+The HeRO algorithm, however, finds a representation that is even more concise: Since the first and third case have the same status of $y$, only the second case needs to be considered as an exception. While the pruned search also finds similar arguments, its theory is overall much larger, containing irrelevant arguments. 
+
+Future work on the pruned search algorithm could be concerned with further filtering out irrelevant arguments. But the approach of the HeRO algorithm is that such irrelevant arguments would not even be created in the first place, so it is more straightforward in this resepct.

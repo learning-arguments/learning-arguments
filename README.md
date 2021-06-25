@@ -71,6 +71,7 @@ pip -r requirements.txt
 Inside the virtual environment (see above) execute the following in the console:
 
 ```
+cd src
 python main.py
 ```
 
@@ -79,12 +80,13 @@ python main.py
 Inside the virtual environment (see above) execute the following in the console:
 
 ```
+cd src
 pytest
 ```
 
 There are some more tests inside `Appendix B.ipynb`, which can be run by opening the notebook within a [Jupyter Notebook](https://jupyter.org/) environment.
 
-## References
+## Mini bibliography
 
 [Bart Verheij.](https://www.ai.rug.nl/~verheij/) [‘Proof with and without Probabilities’.](https://core.ac.uk/download/pdf/232520479.pdf) Artificial Intelligence and Law 25, no. 1 (2017): 127–54.
 

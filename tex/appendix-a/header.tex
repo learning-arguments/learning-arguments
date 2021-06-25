@@ -1,0 +1,130 @@
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper]{geometry}
+\usepackage[myheadings]{fullpage}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{graphicx, wrapfig, setspace, booktabs, float}
+\usepackage{subcaption}
+\usepackage[T1]{fontenc}
+\usepackage[font=small, labelfont=bf]{caption}
+\usepackage{fourier}
+\usepackage[protrusion=true, expansion=true]{microtype}
+\usepackage{lipsum}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{mathtools}
+\usepackage{fancyvrb}
+\usepackage{listings}
+\usepackage{textpos}
+\usepackage{comment}
+\usepackage{afterpage}
+\usepackage{array}
+\usepackage{makecell}
+% \usepackage{pgfgantt}
+\usepackage{tikz}
+% \usepackage[english]{fancyref}
+\usepackage[english]{babel}
+\usepackage{color, xcolor} %red, green, blue, yellow, cyan, magenta, black, white
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{chngcntr}
+\usepackage{subfiles, standalone}
+\usepackage[]{algorithm2e}
+% \usepackage[skins]{tcolorbox}
+\usepackage{rotating} % landscape figures
+\usepackage{float}
+\usepackage{multicol}
+\usepackage{blkarray}
+\usepackage{tabularx}
+\usepackage{gensymb}
+\usepackage{upgreek}
+\usepackage{pdflscape, afterpage}
+\usepackage{longtable} % For the table in risk assessment
+\usepackage[nottoc]{tocbibind}
+% \usepackage{breakurl}
+\PassOptionsToPackage{hyphens}{url}
+\usepackage{hyperref}
+\hypersetup{
+    breaklinks,
+    colorlinks,
+    citecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+\usepackage[natbibapa]{apacite} % needs be loaded after hyperref
+% \usepackage[globalcitecopy]{bibunits}
+% \defaultbibliographystyle{apacite}
+% \defaultbibliography{bibliography}
+\usepackage{appendix}
+\usepackage{dirtytalk}
+\usepackage{syllogism}
+\usepackage{soul}
+
+\geometry{margin=3cm}
+
+\graphicspath{ {./images/} }
+
+\counterwithin*{equation}{section}
+\counterwithin*{equation}{subsection}
+\makeatletter
+\@addtoreset{equation}{section}
+\@addtoreset{equation}{subsection}
+\@addtoreset{equation}{subsubsection}
+\@addtoreset{equation}{paragraph}
+\@addtoreset{equation}{subparagraph}
+\makeatother
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\newcommand{\defeq}{\stackrel{\text{def}}{=}}
+
+\definecolor{mygreen}{RGB}{28,172,0}
+\definecolor{mylilas}{RGB}{170,55,241}
+\lstset{language=python,%
+    %basicstyle=\color{red},
+    breaklines=true,%
+    morekeywords={matlab2tikz},
+    keywordstyle=\color{blue},%
+    morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},
+    identifierstyle=\color{black},%
+    stringstyle=\color{mylilas},
+    commentstyle=\color{mygreen},%
+    showstringspaces=false,%without this there will be a symbol in the places where there is a space
+    numbers=left,%
+    numberstyle={\tiny \color{black}},% size of the numbers
+    numbersep=9pt, % this defines how far the numbers are from the text
+    emph=[1]{for,end,break},emphstyle=[1]\color{red}, %some words to emphasise
+    %emph=[2]{word1,word2}, emphstyle=[2]{style},    
+}
+
+\renewcommand\theadalign{bc}
+\renewcommand\theadfont{\bfseries}
+\renewcommand\theadgape{\Gape[4pt]}
+\renewcommand\cellgape{\Gape[4pt]}
+
+% \newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\onehalfspacing
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+
+
+%% Header and footer
+% \pagestyle{fancy}
+% \fancyhf{}
+% \setlength\headheight{15pt}
+% \fancyhead[L]{}
+% \fancyhead[R]{}
+% \fancyfoot[R]{Page \thepage\ of \pageref{LastPage}}
+
+% comment possibilities for all authors
+\newcommand{\todo}[1]{\textcolor{green}{TODO: #1}}
+\newcommand{\jonas}[1]{\textcolor{purple}{Jonas: #1}}
+\newcommand{\julien}[1]{\textcolor{red}{Julien: #1}}
+\newcommand{\david}[1]{\textcolor{blue}{David: #1}}
+\newcommand{\lukas}[1]{\textcolor{orange}{Lukas: #1}}
+\newcommand{\sepideh}[1]{\textcolor{olive}{Sepideh: #1}}
+
+% \date{September 2020}
+
+\thispagestyle{plain} % page numbers!
+\pagestyle{plain} % page numbers!
+

@@ -34,7 +34,7 @@ import time
 
 preProcessor = dataPreProcessor.dataPreProcessor()
 start_time = time.time()
-discretized_train = preProcessor.discretizeTrain(train, algorithm="EDBinning", oneHotEncoding=False)
+discretized_train = preProcessor.discretizeTrain(train, algorithm="DBSCAN", oneHotEncoding=False)
 end_time = time.time()
 print("Time used to converge:", (end_time - start_time)/60, "minutes.")
 discretized_test = preProcessor.discretizeTest(test, oneHotEncoding=False)

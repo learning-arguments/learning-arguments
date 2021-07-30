@@ -44,7 +44,7 @@ class decisionTreeClassifier:
         self.clf = tree.DecisionTreeClassifier(max_depth=params[0],
                                                max_features=params[1],
                                                min_samples_leaf=params[2],
-                                               min_samples_split=[3],
+                                               min_samples_split=params[3],
                                                random_state=0)
         self.clf.fit(X, y)
         _ = plot_objective(gp)

@@ -12,12 +12,12 @@ from skopt import gp_minimize
 from skopt.plots import plot_objective, plot_convergence
 
 import matplotlib.pyplot as plt
-
+import time
 import sys
 
 
 # discretizes a column of the dataframe
-def transformCol(myData):
+def transformCol(myData, n_calls=50):
     space = [Real(sys.float_info.min, 1.0, name='eps'),
              Integer(1, len(myData), name='min_samples')]
 
@@ -27,7 +27,7 @@ def transformCol(myData):
 
     @use_named_args(space)
     def objective(**params):
-        dbSCAN = DBSCAN(**params)
+        dbSCAN = DBSCAN(**params, n_jobs=-1)
         y = dbSCAN.fit_predict(myDataNormalized)
 
         if len(np.unique(y)) != 1:
@@ -39,14 +39,18 @@ def transformCol(myData):
             # Therefore, assign score worse than worst silhouette score
             return 2
 
-    gp = gp_minimize(objective, space, n_calls=60, random_state=0)
+    start_time = time.time()
+    gp = gp_minimize(objective, space, n_calls=n_calls, random_state=0, n_jobs=-1)
+    end_time = time.time()
+    #print("Time used for discretizing the data: %.2f minutes." % ((end_time - start_time) / 60))
+
     bestEps = gp.x[0]
     bestMinSamples = gp.x[1]
 
     # showMyPlots(gp)
 
     # parameter tuning is finished, make clusters using the best parameters
-    dbSCAN = DBSCAN(bestEps, bestMinSamples)
+    dbSCAN = DBSCAN(bestEps, bestMinSamples, n_jobs=-1)
     predictions = dbSCAN.fit_predict(myDataNormalized)
 
     clusterIndices = np.unique(predictions)

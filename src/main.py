@@ -51,7 +51,7 @@ if __name__ == "__main__":
                                                          no_bins=hyper_parameters.get('no_bins'))
         discretized_test = preProcessor.discretizeTest(test, oneHotEncoding=False)
 
-        for param2 in list(product([1, 5, 20, 50], [2, 4, 6])):
+        for param2 in list(product([5, 20, 50], [2, 4, 6])):
             hyper_parameters = {'search_depth': param2[0], 'max_premises': param2[1]}
             # try:
             print('start: %s' % hyper_parameters)

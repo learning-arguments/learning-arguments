@@ -1,44 +1,56 @@
 import warnings
 
+import matplotlib.pyplot
 import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import MinMaxScaler
 
+from skopt.space import Real, Integer
+from skopt.utils import use_named_args
+from skopt import gp_minimize
+from skopt.plots import plot_objective, plot_convergence
+
+import matplotlib.pyplot as plt
+import time
+import sys
+
 
 # discretizes a column of the dataframe
-def transformCol(myData):
-    minEps = 0.1
-    maxEps = 1.0
+def transformCol(myData, n_calls=50):
+    space = [Real(sys.float_info.min, 1.0, name='eps'),
+             Integer(1, len(myData), name='min_samples')]
 
-    minMinSamples = 1
-    maxMinSamples = len(myData)/2
+    # scaling the range of the data in order to make sure that eps is between 0 and 1
+    scaler = MinMaxScaler()
+    myDataNormalized = scaler.fit_transform(myData)
 
-    bestScore = -float('inf')
-    bestEps = 0.0
-    bestMinSamples = 0
+    @use_named_args(space)
+    def objective(**params):
+        dbSCAN = DBSCAN(**params, n_jobs=-1)
+        y = dbSCAN.fit_predict(myDataNormalized)
 
-    epss = np.linspace(minEps, maxEps, 51)
-    min_samples = np.linspace(minMinSamples, maxMinSamples, 100)
+        if len(np.unique(y)) != 1:
+            score = silhouette_score(myData, dbSCAN.labels_)
+            return -score
+        else:
+            # in case of one cluster, we will not be able to compute silhouette score nor
+            # have any useful information for the column.
+            # Therefore, assign score worse than worst silhouette score
+            return 2
 
-    # for this entire search space, we perform gridsearch to find the best parameters
-    for i in range(len(epss)):
-        for j in range(len(min_samples)):
-            dbSCAN = DBSCAN(eps = epss[i], min_samples = min_samples[j])
-            myDataNormalized = MinMaxScaler().fit_transform(myData)
-            y = dbSCAN.fit_predict(myDataNormalized)
+    start_time = time.time()
+    gp = gp_minimize(objective, space, n_calls=n_calls, random_state=0, n_jobs=-1)
+    end_time = time.time()
+    #print("Time used for discretizing the data: %.2f minutes." % ((end_time - start_time) / 60))
 
-            if len(np.unique(y)) != 1:
-                score = silhouette_score(myData, dbSCAN.labels_)
+    bestEps = gp.x[0]
+    bestMinSamples = gp.x[1]
 
-                if score > bestScore:
-                    bestScore = score
-                    bestEps = epss[i]
-                    bestMinSamples = min_samples[j]
+    # showMyPlots(gp)
 
     # parameter tuning is finished, make clusters using the best parameters
-    dbSCAN = DBSCAN(bestEps, bestMinSamples)
-    myDataNormalized = MinMaxScaler().fit_transform(myData)
+    dbSCAN = DBSCAN(bestEps, bestMinSamples, n_jobs=-1)
     predictions = dbSCAN.fit_predict(myDataNormalized)
 
     clusterIndices = np.unique(predictions)
@@ -75,6 +87,15 @@ def transformCol(myData):
         result[i] = thisResult
 
     return result
+
+
+def showMyPlots(gp):
+    plt.tight_layout()
+    plot_convergence(gp)
+    plt.show()
+
+    _ = plot_objective(gp)
+    plt.show()
 
 
 class DBSCANClustering:

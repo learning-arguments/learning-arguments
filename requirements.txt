@@ -42,7 +42,7 @@ PyYAML==5.4.1
 pyzmq==22.1.0
 queuelib==1.6.1
 regex==2021.4.4
-scikit-learn==0.22.2.post1
+scikit-learn==0.24.2
 scikit-optimize==0.8.1
 scipy==1.6.3
 six==1.16.0
